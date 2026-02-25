@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297" width="210" height="297">
+  <defs>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3d2b79"/>
+      <stop offset="50%" style="stop-color:#4a2b8a"/>
+      <stop offset="100%" style="stop-color:#1e1155"/>
+    </linearGradient>
+    <linearGradient id="footerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e1155"/>
+      <stop offset="100%" style="stop-color:#120a3a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="210" height="297" fill="white"/>
+
+  <!-- ヘッダー -->
+  <rect width="210" height="90" fill="url(#headerGrad)"/>
+
+  <!-- ヘッダー格子模様 -->
+  <g stroke="rgba(255,255,255,0.04)" stroke-width="0.5">
+    <line x1="0" y1="16" x2="210" y2="16"/>
+    <line x1="0" y1="32" x2="210" y2="32"/>
+    <line x1="0" y1="48" x2="210" y2="48"/>
+    <line x1="0" y1="64" x2="210" y2="64"/>
+    <line x1="0" y1="80" x2="210" y2="80"/>
+    <line x1="16" y1="0" x2="16" y2="90"/>
+    <line x1="32" y1="0" x2="32" y2="90"/>
+    <line x1="48" y1="0" x2="48" y2="90"/>
+    <line x1="64" y1="0" x2="64" y2="90"/>
+    <line x1="80" y1="0" x2="80" y2="90"/>
+    <line x1="96" y1="0" x2="96" y2="90"/>
+    <line x1="112" y1="0" x2="112" y2="90"/>
+    <line x1="128" y1="0" x2="128" y2="90"/>
+    <line x1="144" y1="0" x2="144" y2="90"/>
+    <line x1="160" y1="0" x2="160" y2="90"/>
+    <line x1="176" y1="0" x2="176" y2="90"/>
+    <line x1="192" y1="0" x2="192" y2="90"/>
+  </g>
+
+  <!-- タグラベル -->
+  <rect x="16" y="14" width="80" height="11" rx="5.5" fill="none" stroke="#7755bb" stroke-width="0.7"/>
+  <text x="56" y="22.5" font-family="monospace" font-size="5.5" fill="#c8a0f0" text-anchor="middle" letter-spacing="1">PRODUCT INTRODUCTION</text>
+
+  <!-- タイトル -->
+  <text x="16" y="52" font-family="monospace" font-size="18" font-weight="900" fill="#ff6ef7" letter-spacing="2" filter="url(#glow)">VIRTUAL BOOTH</text>
+  <text x="16" y="65" font-family="sans-serif" font-size="6.5" fill="#b09acc" letter-spacing="0.3">AIが対応するオンラインイベントブース・プラットフォーム</text>
+
+  <!-- ボディ -->
+  <!-- Concept セクション -->
+  <text x="16" y="104" font-family="monospace" font-size="5.5" font-weight="700" fill="#7744cc" letter-spacing="1.5">CONCEPT</text>
+  <rect x="16" y="107" width="2" height="22" fill="#7744cc"/>
+  <rect x="20" y="107" width="174" height="22" rx="3" fill="#f7f4ff"/>
+  <text x="25" y="115" font-family="sans-serif" font-size="5" fill="#2a1a50">イベントブースをWebで再現するオープンソース</text>
+  <text x="25" y="122" font-family="sans-serif" font-size="5" fill="#2a1a50">プラットフォームです。guide.md を書き換えるだけで</text>
+  <text x="25" y="129" font-family="sans-serif" font-size="5" fill="#2a1a50">どんな商材にも対応できます。</text>
+
+  <!-- Features セクション -->
+  <text x="16" y="144" font-family="monospace" font-size="5.5" font-weight="700" fill="#7744cc" letter-spacing="1.5">FEATURES</text>
+
+  <!-- 特徴カード 2x2 -->
+  <rect x="16" y="148" width="85" height="32" rx="4" fill="#faf8ff" stroke="#e8e0f8" stroke-width="0.7"/>
+  <text x="22" y="158" font-size="9">🤖</text>
+  <text x="33" y="158" font-family="sans-serif" font-size="5.5" font-weight="700" fill="#3d1b88">AIによる自動応答</text>
+  <text x="22" y="165" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">OpenAI互換のAPIに対応。</text>
+  <text x="22" y="171" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">Ollamaなど幅広い選択肢。</text>
+
+  <rect x="109" y="148" width="85" height="32" rx="4" fill="#faf8ff" stroke="#e8e0f8" stroke-width="0.7"/>
+  <text x="115" y="158" font-size="9">📝</text>
+  <text x="126" y="158" font-family="sans-serif" font-size="5.5" font-weight="700" fill="#3d1b88">簡単カスタマイズ</text>
+  <text x="115" y="165" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">guide.md を編集するだけで</text>
+  <text x="115" y="171" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">AIの知識を変更できます。</text>
+
+  <rect x="16" y="184" width="85" height="32" rx="4" fill="#faf8ff" stroke="#e8e0f8" stroke-width="0.7"/>
+  <text x="22" y="194" font-size="9">🖥️</text>
+  <text x="33" y="194" font-family="sans-serif" font-size="5.5" font-weight="700" fill="#3d1b88">ブース展示の再現</text>
+  <text x="22" y="201" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">机・ディスプレイ・パンフレット</text>
+  <text x="22" y="207" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">をWeb上に表現します。</text>
+
+  <rect x="109" y="184" width="85" height="32" rx="4" fill="#faf8ff" stroke="#e8e0f8" stroke-width="0.7"/>
+  <text x="115" y="194" font-size="9">⚡</text>
+  <text x="126" y="194" font-family="sans-serif" font-size="5.5" font-weight="700" fill="#3d1b88">ストリーミング対応</text>
+  <text x="115" y="201" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">AIの回答をリアルタイムに</text>
+  <text x="115" y="207" font-family="sans-serif" font-size="4.5" fill="#5a4a7a">表示します。</text>
+
+  <!-- Tech Stack -->
+  <text x="16" y="232" font-family="monospace" font-size="5.5" font-weight="700" fill="#7744cc" letter-spacing="1.5">TECH STACK</text>
+  <rect x="16" y="237" width="36" height="10" rx="5" fill="#f0ebff" stroke="#d0c0f0" stroke-width="0.7"/>
+  <text x="34" y="244" font-family="monospace" font-size="5" fill="#5533aa" text-anchor="middle">Next.js</text>
+  <rect x="56" y="237" width="38" height="10" rx="5" fill="#f0ebff" stroke="#d0c0f0" stroke-width="0.7"/>
+  <text x="75" y="244" font-family="monospace" font-size="5" fill="#5533aa" text-anchor="middle">TypeScript</text>
+  <rect x="98" y="237" width="48" height="10" rx="5" fill="#f0ebff" stroke="#d0c0f0" stroke-width="0.7"/>
+  <text x="122" y="244" font-family="monospace" font-size="5" fill="#5533aa" text-anchor="middle">Tailwind CSS v4</text>
+  <rect x="150" y="237" width="44" height="10" rx="5" fill="#f0ebff" stroke="#d0c0f0" stroke-width="0.7"/>
+  <text x="172" y="244" font-family="monospace" font-size="5" fill="#5533aa" text-anchor="middle">OpenAI SDK</text>
+
+  <!-- How to -->
+  <text x="16" y="260" font-family="monospace" font-size="5.5" font-weight="700" fill="#7744cc" letter-spacing="1.5">HOW TO CUSTOMIZE</text>
+
+  <!-- フロー -->
+  <rect x="16" y="265" width="38" height="18" rx="3" fill="url(#headerGrad)"/>
+  <text x="35" y="272" font-family="sans-serif" font-size="4" fill="rgba(255,255,255,0.7)" text-anchor="middle">STEP 1</text>
+  <text x="35" y="279" font-family="sans-serif" font-size="4.5" fill="white" text-anchor="middle">クローン</text>
+
+  <text x="57" y="275" font-family="sans-serif" font-size="8" fill="#9966dd">→</text>
+
+  <rect x="64" y="265" width="38" height="18" rx="3" fill="url(#headerGrad)"/>
+  <text x="83" y="272" font-family="sans-serif" font-size="4" fill="rgba(255,255,255,0.7)" text-anchor="middle">STEP 2</text>
+  <text x="83" y="279" font-family="sans-serif" font-size="4.5" fill="white" text-anchor="middle">guide.md編集</text>
+
+  <text x="105" y="275" font-family="sans-serif" font-size="8" fill="#9966dd">→</text>
+
+  <rect x="112" y="265" width="38" height="18" rx="3" fill="url(#headerGrad)"/>
+  <text x="131" y="272" font-family="sans-serif" font-size="4" fill="rgba(255,255,255,0.7)" text-anchor="middle">STEP 3</text>
+  <text x="131" y="279" font-family="sans-serif" font-size="4.5" fill="white" text-anchor="middle">APIキー設定</text>
+
+  <text x="153" y="275" font-family="sans-serif" font-size="8" fill="#9966dd">→</text>
+
+  <rect x="160" y="265" width="34" height="18" rx="3" fill="url(#headerGrad)"/>
+  <text x="177" y="272" font-family="sans-serif" font-size="4" fill="rgba(255,255,255,0.7)" text-anchor="middle">STEP 4</text>
+  <text x="177" y="279" font-family="sans-serif" font-size="4.5" fill="white" text-anchor="middle">デプロイ！</text>
+
+  <!-- フッター -->
+  <rect y="286" width="210" height="11" fill="url(#footerGrad)"/>
+  <text x="16" y="293.5" font-family="sans-serif" font-size="5" fill="#ff6ef7" font-weight="700">Virtual Booth</text>
+  <text x="105" y="293.5" font-family="sans-serif" font-size="4.5" fill="#aa88cc" text-anchor="middle">Open Source / MIT License</text>
+</svg>

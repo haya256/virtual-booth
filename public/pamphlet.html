@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Booth - 紹介資料</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #f0eef8;
+      color: #1a1030;
+      line-height: 1.7;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 20px auto;
+      background: white;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: linear-gradient(135deg, #2d1b69 0%, #4a2b8a 50%, #1e1155 100%);
+      padding: 40px 48px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .header-tag {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: #c8a0f0;
+      border: 1px solid #7755bb;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .header h1 {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: #ff6ef7;
+      text-shadow: 0 0 20px rgba(255,110,247,0.5);
+      position: relative;
+      line-height: 1.2;
+    }
+    .header h1 span {
+      display: block;
+      font-size: 14px;
+      font-weight: 400;
+      color: #b09acc;
+      letter-spacing: 0.05em;
+      margin-top: 8px;
+      text-shadow: none;
+    }
+
+    /* ボディ */
+    .body {
+      padding: 40px 48px;
+    }
+
+    /* セクション */
+    .section {
+      margin-bottom: 36px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #7744cc;
+      border-left: 3px solid #7744cc;
+      padding-left: 10px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    /* コンセプト文 */
+    .lead {
+      font-size: 15px;
+      color: #2a1a50;
+      line-height: 1.9;
+      background: #f7f4ff;
+      border-radius: 8px;
+      padding: 18px 20px;
+      border-left: 4px solid #c8a0f0;
+    }
+
+    /* 特徴カード */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .feature-card {
+      background: #faf8ff;
+      border: 1px solid #e8e0f8;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .feature-card .icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .feature-card h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3d1b88;
+      margin-bottom: 6px;
+    }
+    .feature-card p {
+      font-size: 12px;
+      color: #5a4a7a;
+      line-height: 1.6;
+    }
+
+    /* ユースケース */
+    .usecase-list {
+      list-style: none;
+    }
+    .usecase-list li {
+      font-size: 13px;
+      color: #2a1a50;
+      padding: 10px 0;
+      border-bottom: 1px dashed #e0d8f0;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .usecase-list li:last-child { border-bottom: none; }
+    .usecase-list li::before {
+      content: '✦';
+      color: #9966dd;
+      font-size: 10px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    /* 技術スタック */
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tech-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 100px;
+      background: #f0ebff;
+      color: #5533aa;
+      border: 1px solid #d0c0f0;
+    }
+
+    /* カスタマイズフロー */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: linear-gradient(135deg, #3d1b88, #6633bb);
+      color: white;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      text-align: center;
+      min-width: 100px;
+    }
+    .flow-step strong {
+      display: block;
+      font-size: 10px;
+      opacity: 0.75;
+      margin-bottom: 2px;
+      letter-spacing: 0.05em;
+    }
+    .flow-arrow {
+      color: #9966dd;
+      font-size: 16px;
+    }
+
+    /* フッター */
+    .footer {
+      background: #1e1155;
+      padding: 24px 48px;
+      color: #aa88cc;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .footer strong {
+      color: #ff6ef7;
+      font-size: 14px;
+    }
+
+    @media print {
+      body { background: white; }
+      .page { box-shadow: none; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- ヘッダー -->
+    <div class="header">
+      <div class="header-tag">PRODUCT INTRODUCTION</div>
+      <h1>
+        VIRTUAL BOOTH
+        <span>AIが対応するオンラインイベントブース・プラットフォーム</span>
+      </h1>
+    </div>
+
+    <!-- ボディ -->
+    <div class="body">
+
+      <!-- コンセプト -->
+      <div class="section">
+        <div class="section-title">Concept</div>
+        <p class="lead">
+          Virtual Booth は、イベントやカンファレンスのブースをWebページとして再現するオープンソースのプラットフォームです。
+          AIアシスタントが来場者の質問にリアルタイムで対応し、まるで実際のブースにいるような体験を提供します。
+          <code style="background:#ede8ff;padding:2px 6px;border-radius:4px;font-size:12px;">guide.md</code> を書き換えるだけで、どんな商材にも対応できます。
+        </p>
+      </div>
+
+      <!-- 特徴 -->
+      <div class="section">
+        <div class="section-title">Features</div>
+        <div class="features">
+          <div class="feature-card">
+            <div class="icon">🤖</div>
+            <h3>AIによる自動応答</h3>
+            <p>OpenAI互換のAPIに対応。さくらのAI Engine、Ollama（ローカル）など幅広い選択肢から選べます。</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">📝</div>
+            <h3>ガイドで簡単カスタマイズ</h3>
+            <p>guide.md を編集するだけでAIの知識・口調・対応範囲をすべて変更できます。</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🖥️</div>
+            <h3>ブース展示の再現</h3>
+            <p>机・ディスプレイ・パンフレット・担当者キャラクターをWeb上に表現。リアルなブース体験を提供。</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">⚡</div>
+            <h3>ストリーミング対応</h3>
+            <p>AIの回答をリアルタイムに表示。待ち時間を感じさせない自然な対話が可能です。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ユースケース -->
+      <div class="section">
+        <div class="section-title">Use Cases</div>
+        <ul class="usecase-list">
+          <li>展示会・カンファレンスのオンラインブース出展コストを削減したい</li>
+          <li>自社サービスのランディングページにAIチャット対応を組み込みたい</li>
+          <li>製品デモサイトを素早く立ち上げたい開発チーム</li>
+          <li>24時間365日、AIが来場者の問い合わせに対応できる体制を作りたい</li>
+        </ul>
+      </div>
+
+      <!-- 技術スタック -->
+      <div class="section">
+        <div class="section-title">Tech Stack</div>
+        <div class="tech-grid">
+          <span class="tech-badge">Next.js 16</span>
+          <span class="tech-badge">TypeScript</span>
+          <span class="tech-badge">Tailwind CSS v4</span>
+          <span class="tech-badge">OpenAI SDK</span>
+          <span class="tech-badge">SSE Streaming</span>
+          <span class="tech-badge">App Router</span>
+        </div>
+      </div>
+
+      <!-- カスタマイズの流れ -->
+      <div class="section">
+        <div class="section-title">How to Customize</div>
+        <div class="flow">
+          <div class="flow-step">
+            <strong>STEP 1</strong>
+            リポジトリを<br>クローン
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <strong>STEP 2</strong>
+            guide.md を<br>書き換える
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <strong>STEP 3</strong>
+            AIのAPIキーを<br>設定する
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <strong>STEP 4</strong>
+            デプロイして<br>公開！
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- フッター -->
+    <div class="footer">
+      <div>
+        <strong>Virtual Booth</strong><br>
+        オープンソース / MIT License
+      </div>
+      <div style="text-align:right;">
+        このページはサンプルです<br>
+        guide.md を書き換えてカスタマイズできます
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
