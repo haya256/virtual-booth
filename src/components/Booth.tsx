@@ -19,8 +19,8 @@ export default function Booth({ title, subtitle }: BoothProps) {
       <div
         className="rounded-t-2xl px-8 pt-6 pb-4 relative overflow-hidden"
         style={{
-          background: "linear-gradient(160deg, #3d2b79 0%, #2d1b69 50%, #1e1155 100%)",
-          border: "2px solid #5544aa",
+          background: "linear-gradient(160deg, var(--vb-wall-start) 0%, var(--vb-wall-mid) 50%, var(--vb-wall-end) 100%)",
+          border: "2px solid var(--vb-border)",
           borderBottom: "none",
           minHeight: 100,
         }}
@@ -40,22 +40,22 @@ export default function Booth({ title, subtitle }: BoothProps) {
             className="px-8 py-2 rounded-md text-center relative"
             style={{
               background: "#1a0f40",
-              border: "2px solid #ff6ef7",
-              boxShadow: "0 0 15px rgba(255,110,247,0.4), 0 0 30px rgba(255,110,247,0.1)",
+              border: "2px solid var(--vb-accent)",
+              boxShadow: "0 0 15px color-mix(in srgb, var(--vb-accent) 40%, transparent), 0 0 30px color-mix(in srgb, var(--vb-accent) 10%, transparent)",
             }}
           >
             <h1
               className="text-2xl font-bold tracking-widest"
               style={{
-                color: "#ff6ef7",
-                textShadow: "0 0 10px rgba(255,110,247,0.8)",
+                color: "var(--vb-accent)",
+                textShadow: "0 0 10px color-mix(in srgb, var(--vb-accent) 80%, transparent)",
                 fontFamily: "monospace",
               }}
             >
               {title}
             </h1>
             {subtitle && (
-              <p className="text-xs mt-0.5" style={{ color: "#aa88cc" }}>
+              <p className="text-xs mt-0.5" style={{ color: "var(--vb-text-secondary)" }}>
                 {subtitle}
               </p>
             )}
@@ -68,8 +68,8 @@ export default function Booth({ title, subtitle }: BoothProps) {
       <div
         className="relative px-8 pt-6"
         style={{
-          background: "linear-gradient(180deg, #8a5a30 0%, #7a4e2d 100%)",
-          border: "2px solid #5544aa",
+          background: "linear-gradient(180deg, var(--vb-desk-top) 0%, var(--vb-desk-bottom) 100%)",
+          border: "2px solid var(--vb-border)",
           borderTop: "4px solid #a06030",
           borderBottom: "none",
           minHeight: 380,
@@ -114,8 +114,8 @@ export default function Booth({ title, subtitle }: BoothProps) {
         className="rounded-b-sm"
         style={{
           height: 24,
-          background: "linear-gradient(180deg, #5c3a1e 0%, #4a2e18 100%)",
-          border: "2px solid #5544aa",
+          background: "linear-gradient(180deg, var(--vb-desk-front-top) 0%, var(--vb-desk-front-bottom) 100%)",
+          border: "2px solid var(--vb-border)",
           borderTop: "none",
           boxShadow: "0 8px 20px rgba(0,0,0,0.6)",
         }}

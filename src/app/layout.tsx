@@ -1,6 +1,16 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { readFileSync } from "fs";
+import { join } from "path";
 import "./globals.css";
+
+function getSkinCSS(): string {
+  try {
+    return readFileSync(join(process.cwd(), "content", "skin.css"), "utf-8");
+  } catch {
+    return "";
+  }
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +32,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const skinCSS = getSkinCSS();
   return (
     <html lang="ja" suppressHydrationWarning>
+      <head>
+        {skinCSS && <style dangerouslySetInnerHTML={{ __html: skinCSS }} />}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

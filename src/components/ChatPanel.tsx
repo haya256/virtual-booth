@@ -211,10 +211,10 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
   return (
     <div style={{ width: "100%", fontFamily: "monospace" }}>
       <div style={{
-        background: "rgba(6, 6, 20, 0.96)",
-        border: "2px solid #5544bb",
+        background: "var(--vb-chat-bg)",
+        border: "2px solid var(--vb-chat-border)",
         borderRadius: 4,
-        boxShadow: "0 0 0 1px #110033, 0 -4px 24px rgba(68, 51, 170, 0.4)",
+        boxShadow: "0 0 0 1px #110033, 0 -4px 24px color-mix(in srgb, var(--vb-chat-border) 40%, transparent)",
         overflow: "hidden",
       }}>
         {/* キャラクター名タグ */}
@@ -222,11 +222,11 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
           <div style={{
             display: "inline-block",
             background: "#16113a",
-            border: "2px solid #5544bb",
+            border: "2px solid var(--vb-chat-border)",
             borderBottom: "2px solid #16113a",
             borderRadius: "4px 4px 0 0",
             padding: "2px 14px",
-            color: "#c8a0f0",
+            color: "var(--vb-text-secondary)",
             fontSize: 11,
             fontWeight: "bold",
             letterSpacing: "0.15em",
@@ -244,7 +244,7 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
           borderRadius: "0 4px 4px 4px",
           minHeight: 72,
           padding: "10px 14px",
-          color: "#e8e0ff",
+          color: "var(--vb-text-primary)",
           fontSize: 13,
           lineHeight: 1.85,
           letterSpacing: "0.04em",
@@ -270,7 +270,7 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
               {canAdvance && (
                 <span className="animate-bounce" style={{
                   display: "inline-block", marginLeft: 6,
-                  color: hasNextPage ? "#c8a0f0" : "#88aaff",
+                  color: hasNextPage ? "var(--vb-text-secondary)" : "var(--vb-display-border)",
                   fontSize: 13, lineHeight: 1, verticalAlign: "middle",
                 }}>▼</span>
               )}
@@ -302,7 +302,7 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
 
         {/* 入力エリア */}
         <div style={{ display: "flex", gap: 6, padding: "7px 12px", alignItems: "center" }}>
-          <span style={{ color: "#5544aa", fontSize: 13, flexShrink: 0 }}>▶</span>
+          <span style={{ color: "var(--vb-border)", fontSize: 13, flexShrink: 0 }}>▶</span>
           <input
             ref={inputRef}
             type="text"
@@ -314,7 +314,7 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
             style={{
               flex: 1,
               background: "transparent",
-              color: "#e8e0ff",
+              color: "var(--vb-text-primary)",
               border: "none",
               outline: "none",
               fontSize: 13,

@@ -1,0 +1,67 @@
+/**
+ * Virtual Booth スキンファイル
+ *
+ * このファイルの変数を書き換えるだけでデザインをカスタマイズできます。
+ * 変更後は開発サーバーを再起動してください（npm run dev）。
+ *
+ * 現在のテーマ: デフォルト（紫系ネオン）
+ */
+
+:root {
+  /* ページ背景色 */
+  --vb-bg: #0a0a1a;
+
+  /* ブース壁のグラデーション（上から下へ） */
+  --vb-wall-start: #3d2b79;  /* 壁の上部色 */
+  --vb-wall-mid:   #2d1b69;  /* 壁の中間色 */
+  --vb-wall-end:   #1e1155;  /* 壁の下部色 */
+
+  /* ブース枠線色 */
+  --vb-border: #5544aa;
+
+  /* ネオンアクセント色（看板テキスト・ボーダー・グロー効果） */
+  --vb-accent: #ff6ef7;
+
+  /* ディスプレイ（モニター）の枠線・スライド見出し色 */
+  --vb-display-border: #4488ff;
+
+  /* 机の上面グラデーション */
+  --vb-desk-top:    #8a5a30;  /* 机上面の上部色 */
+  --vb-desk-bottom: #7a4e2d;  /* 机上面の下部色 */
+
+  /* 机の前面グラデーション（厚みの表現） */
+  --vb-desk-front-top:    #5c3a1e;
+  --vb-desk-front-bottom: #4a2e18;
+
+  /* テキスト色 */
+  --vb-text-primary:   #e2d9ff;  /* メインテキスト */
+  --vb-text-secondary: #c8a0f0;  /* サブテキスト・ラベル */
+
+  /* チャットパネル */
+  --vb-chat-bg:     rgba(6, 6, 20, 0.96);  /* チャット背景（半透明） */
+  --vb-chat-border: #5544bb;               /* チャット枠線 */
+}
+
+
+/* =============================================
+   カスタマイズ例: グリーン系テーマ
+   下のコメントを外すと緑系デザインになります
+   =============================================
+
+:root {
+  --vb-bg: #070f07;
+  --vb-wall-start: #1a3a2b;
+  --vb-wall-mid:   #0f2a1e;
+  --vb-wall-end:   #071a12;
+  --vb-border:     #1a5a3a;
+  --vb-accent:     #00ff88;
+  --vb-display-border: #00cc66;
+  --vb-desk-top:    #3a2a10;
+  --vb-desk-bottom: #2e2010;
+  --vb-text-primary:   #d0ffe0;
+  --vb-text-secondary: #88dd99;
+  --vb-chat-bg:     rgba(4, 12, 4, 0.96);
+  --vb-chat-border: #1a6a3a;
+}
+
+*/

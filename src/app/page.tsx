@@ -16,7 +16,7 @@ function getBoothConfig() {
 export default function Home() {
   const { title, subtitle } = getBoothConfig();
   return (
-    <main className="min-h-screen flex items-center justify-center p-6" style={{ background: "#0a0a1a" }}>
+    <main className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--vb-bg)" }}>
       <Booth title={title} subtitle={subtitle} />
     </main>
   );

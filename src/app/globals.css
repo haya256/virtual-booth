@@ -1,7 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --booth-bg: #0a0a1a;
+  /* ページ背景 */
+  --vb-bg: #0a0a1a;
+
+  /* 壁グラデーション */
+  --vb-wall-start: #3d2b79;
+  --vb-wall-mid: #2d1b69;
+  --vb-wall-end: #1e1155;
+
+  /* ブース枠線 */
+  --vb-border: #5544aa;
+
+  /* ネオンアクセント（看板・グロー） */
+  --vb-accent: #ff6ef7;
+
+  /* ディスプレイ枠線 */
+  --vb-display-border: #4488ff;
+
+  /* 机上面 */
+  --vb-desk-top: #8a5a30;
+  --vb-desk-bottom: #7a4e2d;
+
+  /* 机前面 */
+  --vb-desk-front-top: #5c3a1e;
+  --vb-desk-front-bottom: #4a2e18;
+
+  /* テキスト */
+  --vb-text-primary: #e2d9ff;
+  --vb-text-secondary: #c8a0f0;
+
+  /* チャットパネル */
+  --vb-chat-bg: rgba(6, 6, 20, 0.96);
+  --vb-chat-border: #5544bb;
 }
 
 @theme inline {
@@ -10,8 +41,8 @@
 }
 
 body {
-  background: var(--booth-bg);
-  color: #e2d9ff;
+  background: var(--vb-bg);
+  color: var(--vb-text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 

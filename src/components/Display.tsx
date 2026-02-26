@@ -6,10 +6,10 @@ const slides = [
     content: (
       <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-3"
         style={{ background: "linear-gradient(135deg, #1a0f40 0%, #2d1b69 100%)" }}>
-        <div className="text-xs tracking-widest" style={{ color: "#c8a0f0" }}>WELCOME TO</div>
+        <div className="text-xs tracking-widest" style={{ color: "var(--vb-text-secondary)" }}>WELCOME TO</div>
         <div
           className="text-lg font-black tracking-widest text-center leading-tight"
-          style={{ color: "#ff6ef7", textShadow: "0 0 12px rgba(255,110,247,0.8)", fontFamily: "monospace" }}
+          style={{ color: "var(--vb-accent)", textShadow: "0 0 12px color-mix(in srgb, var(--vb-accent) 80%, transparent)", fontFamily: "monospace" }}
         >
           VIRTUAL<br />BOOTH
         </div>
@@ -24,7 +24,7 @@ const slides = [
     content: (
       <div className="w-full h-full flex flex-col justify-center gap-2 p-4"
         style={{ background: "#0d0d1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-1" style={{ color: "#4488ff" }}>
+        <div className="text-xs font-bold tracking-wider mb-1" style={{ color: "var(--vb-display-border)" }}>
           WHAT IS THIS?
         </div>
         <p className="text-xs leading-relaxed" style={{ color: "#ccc0ee" }}>
@@ -33,7 +33,7 @@ const slides = [
           オープンソースの<br />
           プラットフォームです。
         </p>
-        <div className="w-8 h-0.5 rounded" style={{ background: "#4488ff" }} />
+        <div className="w-8 h-0.5 rounded" style={{ background: "var(--vb-display-border)" }} />
       </div>
     ),
   },
@@ -42,7 +42,7 @@ const slides = [
     content: (
       <div className="w-full h-full flex flex-col justify-center gap-1.5 p-3"
         style={{ background: "#0a0a1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "#4488ff" }}>
+        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "var(--vb-display-border)" }}>
           FEATURES
         </div>
         {[
@@ -66,7 +66,7 @@ const slides = [
     content: (
       <div className="w-full h-full flex flex-col justify-center gap-2 p-3"
         style={{ background: "#0d0d1f" }}>
-        <div className="text-xs font-bold tracking-wider" style={{ color: "#4488ff" }}>
+        <div className="text-xs font-bold tracking-wider" style={{ color: "var(--vb-display-border)" }}>
           CUSTOMIZE
         </div>
         <div
@@ -88,7 +88,7 @@ const slides = [
     content: (
       <div className="w-full h-full flex flex-col justify-center gap-2 p-3"
         style={{ background: "#0a0a1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "#4488ff" }}>
+        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "var(--vb-display-border)" }}>
           GET STARTED
         </div>
         {[
@@ -100,7 +100,7 @@ const slides = [
           <div key={step.n} className="flex items-center gap-2">
             <div
               className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold"
-              style={{ background: "#4455cc", fontSize: 8 }}
+              style={{ background: "var(--vb-display-border)", fontSize: 8 }}
             >
               {step.n}
             </div>
@@ -129,8 +129,8 @@ export default function Display({ currentSlide: current, setCurrentSlide: setCur
         className="relative w-56 h-36 rounded-sm overflow-hidden group"
         style={{
           background: "#0d0d1a",
-          border: "3px solid #4488ff",
-          boxShadow: "0 0 20px rgba(68,136,255,0.5), inset 0 0 10px rgba(68,136,255,0.1)",
+          border: "3px solid var(--vb-display-border)",
+          boxShadow: "0 0 20px color-mix(in srgb, var(--vb-display-border) 50%, transparent), inset 0 0 10px color-mix(in srgb, var(--vb-display-border) 10%, transparent)",
         }}
       >
         {/* スライドコンテンツ */}
