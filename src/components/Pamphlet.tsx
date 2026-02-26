@@ -5,7 +5,7 @@ type PamphletProps = {
 
 export default function Pamphlet({
   title = "製品パンフレット",
-  pdfSrc = "/pamphlet.html",
+  pdfSrc = "/pamphlet",
 }: PamphletProps) {
   return (
     <div className="flex flex-col items-center gap-2">

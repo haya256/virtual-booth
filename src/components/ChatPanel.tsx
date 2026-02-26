@@ -72,6 +72,11 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  // 回答完了時に入力欄へ自動フォーカス
+  useEffect(() => {
+    if (!isLoading) inputRef.current?.focus();
+  }, [isLoading]);
+
   const currentSection = sections[sectionIdx];
   const currentText = currentSection?.pages[pageIdx] ?? "";
   const hasNextPage = !!currentSection && pageIdx < currentSection.pages.length - 1;
@@ -129,7 +134,15 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newHistory }),
       });
-      if (!response.ok || !response.body) throw new Error("API error");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData?.error ?? "エラーが発生しました。もう一度お試しください。";
+        setSections([{ slide: null, pages: [errorMsg] }]);
+        setSectionIdx(0);
+        setPageIdx(0);
+        return;
+      }
+      if (!response.body) throw new Error("API error");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();

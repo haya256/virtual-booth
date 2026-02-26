@@ -6,12 +6,14 @@ import Pamphlet from "./Pamphlet";
 import Attendant from "./Attendant";
 import ChatPanel from "./ChatPanel";
 
-export default function Booth() {
+type BoothProps = { title: string; subtitle: string };
+
+export default function Booth({ title, subtitle }: BoothProps) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
   return (
-    <div className="w-full max-w-3xl relative select-none" style={{ paddingBottom: isChatOpen ? 210 : 0 }}>
+    <div className="w-full max-w-3xl relative select-none">
 
       {/* ブース背景壁 */}
       <div
@@ -20,7 +22,7 @@ export default function Booth() {
           background: "linear-gradient(160deg, #3d2b79 0%, #2d1b69 50%, #1e1155 100%)",
           border: "2px solid #5544aa",
           borderBottom: "none",
-          minHeight: 220,
+          minHeight: 100,
         }}
       >
         {/* 壁の格子模様 */}
@@ -50,43 +52,28 @@ export default function Booth() {
                 fontFamily: "monospace",
               }}
             >
-              VIRTUAL BOOTH
+              {title}
             </h1>
-            <p className="text-xs mt-0.5" style={{ color: "#aa88cc" }}>
-              AIがあなたの質問にお答えします
-            </p>
+            {subtitle && (
+              <p className="text-xs mt-0.5" style={{ color: "#aa88cc" }}>
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
 
-        {/* 壁上のコンテンツエリア (ブース背景) */}
-        <div className="flex justify-center items-end gap-16 pb-2">
-          {/* ディスプレイ置き台 (壁面) */}
-          <div className="flex flex-col items-center gap-2">
-            <div
-              className="text-xs mb-1"
-              style={{ color: "#88aaff", letterSpacing: "0.1em" }}
-            >
-              ── DEMO ──
-            </div>
-          </div>
-
-          {/* 右側の装飾 */}
-          <div className="flex flex-col items-center gap-1">
-            <div className="text-xs" style={{ color: "#8877aa" }}>
-              ── INFO ──
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 机の上面 */}
       <div
-        className="relative px-8 py-5"
+        className="relative px-8 pt-6"
         style={{
           background: "linear-gradient(180deg, #8a5a30 0%, #7a4e2d 100%)",
           border: "2px solid #5544aa",
           borderTop: "4px solid #a06030",
           borderBottom: "none",
+          minHeight: 380,
+          paddingBottom: 24,
         }}
       >
         {/* 机の上の木目テクスチャ */}
@@ -98,7 +85,7 @@ export default function Booth() {
         />
 
         {/* 机の上のアイテム配置 */}
-        <div className="relative flex items-end justify-between gap-4">
+        <div className="relative flex items-start justify-between gap-4">
           {/* 左: ディスプレイ */}
           <div className="flex-shrink-0">
             <Display currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} />
@@ -106,10 +93,20 @@ export default function Booth() {
 
           {/* 右: パンフレット + 担当者 */}
           <div className="flex items-end gap-8 pb-1">
-            <Pamphlet title="Virtual Booth 紹介資料" />
+            <Pamphlet title="パンフレット" />
             <Attendant onChat={() => setIsChatOpen(true)} />
           </div>
         </div>
+
+        {/* チャットパネル（机の下部に配置） */}
+        {isChatOpen && (
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20 }}>
+            <ChatPanel
+              onClose={() => setIsChatOpen(false)}
+              setCurrentSlide={setCurrentSlide}
+            />
+          </div>
+        )}
       </div>
 
       {/* 机の前面 (厚み表現) */}
@@ -132,16 +129,6 @@ export default function Booth() {
           background: "radial-gradient(ellipse at center, rgba(0,0,0,0.4) 0%, transparent 70%)",
         }}
       />
-
-      {/* チャットパネル（RPGダイアログ：ブース下部に全幅配置） */}
-      {isChatOpen && (
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20 }}>
-          <ChatPanel
-            onClose={() => setIsChatOpen(false)}
-            setCurrentSlide={setCurrentSlide}
-          />
-        </div>
-      )}
     </div>
   );
 }
