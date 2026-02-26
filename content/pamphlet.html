@@ -168,6 +168,36 @@
       border: 1px solid #d0c0f0;
     }
 
+    /* カスタマイズファイル一覧 */
+    .file-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .file-item {
+      background: #0d0d1f;
+      border: 1px solid #3d2b79;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .file-item .file-icon { font-size: 18px; flex-shrink: 0; }
+    .file-item strong {
+      display: block;
+      font-size: 12px;
+      font-family: monospace;
+      color: #88ffaa;
+      margin-bottom: 3px;
+    }
+    .file-item span {
+      font-size: 11px;
+      color: #9988bb;
+      line-height: 1.5;
+    }
+
     /* カスタマイズフロー */
     .flow {
       display: flex;
@@ -238,7 +268,7 @@
         <p class="lead">
           Virtual Booth は、イベントやカンファレンスのブースをWebページとして再現するオープンソースのプラットフォームです。
           AIアシスタントが来場者の質問にリアルタイムで対応し、まるで実際のブースにいるような体験を提供します。
-          <code style="background:#ede8ff;padding:2px 6px;border-radius:4px;font-size:12px;">guide.md</code> を書き換えるだけで、どんな商材にも対応できます。
+          <code style="background:#ede8ff;padding:2px 6px;border-radius:4px;font-size:12px;">content/</code> 内の4ファイルを書き換えるだけで、デザインもAIの振る舞いもどんな商材にも対応できます。
         </p>
       </div>
 
@@ -249,22 +279,22 @@
           <div class="feature-card">
             <div class="icon">🤖</div>
             <h3>AIによる自動応答</h3>
-            <p>OpenAI互換のAPIに対応。さくらのAI Engine、Ollama（ローカル）など幅広い選択肢から選べます。</p>
+            <p>OpenAI互換のAPIに対応。Ollama（ローカル）、LM Studio、OpenAI など幅広い選択肢から選べます。</p>
           </div>
           <div class="feature-card">
-            <div class="icon">📝</div>
-            <h3>ガイドで簡単カスタマイズ</h3>
-            <p>guide.md を編集するだけでAIの知識・口調・対応範囲をすべて変更できます。</p>
+            <div class="icon">🎨</div>
+            <h3>スキンでテーマ変更</h3>
+            <p>skin.css のCSS変数を書き換えるだけでブース全体のカラーテーマを変更できます。サンプルテーマも同梱。</p>
           </div>
           <div class="feature-card">
-            <div class="icon">🖥️</div>
-            <h3>ブース展示の再現</h3>
-            <p>机・ディスプレイ・パンフレット・担当者キャラクターをWeb上に表現。リアルなブース体験を提供。</p>
+            <div class="icon">🧑</div>
+            <h3>カスタムキャラクター</h3>
+            <p>attendant.svg を置くだけでAI担当者の見た目を差し替え。skin.css からアニメーションも適用できます。</p>
           </div>
           <div class="feature-card">
-            <div class="icon">⚡</div>
-            <h3>ストリーミング対応</h3>
-            <p>AIの回答をリアルタイムに表示。待ち時間を感じさせない自然な対話が可能です。</p>
+            <div class="icon">📄</div>
+            <h3>パンフレット自動反映</h3>
+            <p>pamphlet.html を編集するとブース上のサムネイルにも即時反映。印刷・PDF出力にも対応。</p>
           </div>
         </div>
       </div>
@@ -296,6 +326,36 @@
       <!-- カスタマイズの流れ -->
       <div class="section">
         <div class="section-title">How to Customize</div>
+        <div class="file-list">
+          <div class="file-item">
+            <span class="file-icon">📝</span>
+            <div>
+              <strong>guide.md</strong>
+              <span>AIの知識・口調・スライド内容を記述</span>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">🎨</span>
+            <div>
+              <strong>skin.css</strong>
+              <span>CSS変数でカラーテーマを変更</span>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">🧑</span>
+            <div>
+              <strong>attendant.svg</strong>
+              <span>AI担当者のキャラクターを差し替え</span>
+            </div>
+          </div>
+          <div class="file-item">
+            <span class="file-icon">📄</span>
+            <div>
+              <strong>pamphlet.html</strong>
+              <span>パンフレットの内容を編集</span>
+            </div>
+          </div>
+        </div>
         <div class="flow">
           <div class="flow-step">
             <strong>STEP 1</strong>
@@ -304,7 +364,7 @@
           <div class="flow-arrow">→</div>
           <div class="flow-step">
             <strong>STEP 2</strong>
-            guide.md を<br>書き換える
+            content/ を<br>書き換える
           </div>
           <div class="flow-arrow">→</div>
           <div class="flow-step">
@@ -329,7 +389,7 @@
       </div>
       <div style="text-align:right;">
         このページはサンプルです<br>
-        guide.md を書き換えてカスタマイズできます
+        content/pamphlet.html を編集してカスタマイズできます
       </div>
     </div>
 
