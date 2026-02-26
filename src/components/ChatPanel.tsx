@@ -10,6 +10,7 @@ type Section = { slide: number | null; pages: string[] };
 type ChatPanelProps = {
   onClose: () => void;
   setCurrentSlide: (n: number) => void;
+  attendantName?: string;
 };
 
 function splitIntoPages(text: string): string[] {
@@ -59,7 +60,7 @@ function parseIntoSections(rawText: string): Section[] {
   return sections.length > 0 ? sections : [{ slide: null, pages: [""] }];
 }
 
-export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) {
+export default function ChatPanel({ onClose, setCurrentSlide, attendantName = "AI 担当者" }: ChatPanelProps) {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -216,12 +217,13 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
         borderRadius: 4,
         boxShadow: "0 0 0 1px #110033, 0 -4px 24px color-mix(in srgb, var(--vb-chat-border) 40%, transparent)",
         overflow: "hidden",
+        backdropFilter: "blur(1px)",
       }}>
-        {/* キャラクター名タグ */}
-        <div style={{ paddingTop: 8, paddingLeft: 12 }}>
+        {/* キャラクター名タグ + 閉じるボタン */}
+        <div style={{ paddingTop: 8, paddingLeft: 12, paddingRight: 8, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
           <div style={{
             display: "inline-block",
-            background: "#16113a",
+            background: "rgba(22, 17, 58, 0.35)",
             border: "2px solid var(--vb-chat-border)",
             borderBottom: "2px solid #16113a",
             borderRadius: "4px 4px 0 0",
@@ -233,12 +235,24 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
             marginBottom: -2,
             position: "relative",
             zIndex: 1,
-          }}>AI 担当者</div>
+          }}>{attendantName}</div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              color: "#443366",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 14,
+              padding: "0 2px",
+              lineHeight: 1,
+            }}
+          >✕</button>
         </div>
 
         {/* テキスト表示エリア */}
         <div style={{
-          background: "#16113a",
+          background: "rgba(22, 17, 58, 0.35)",
           border: "1px solid #332266",
           margin: "0 12px",
           borderRadius: "0 4px 4px 4px",
@@ -327,7 +341,7 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
             disabled={isLoading || !input.trim()}
             style={{
               background: "transparent",
-              color: isLoading || !input.trim() ? "#332255" : "#9977cc",
+              color: isLoading || !input.trim() ? "var(--vb-text-secondary)" : "var(--vb-text-primary)",
               border: `1px solid ${isLoading || !input.trim() ? "#221144" : "#6655aa"}`,
               borderRadius: 3,
               padding: "2px 12px",
@@ -338,18 +352,6 @@ export default function ChatPanel({ onClose, setCurrentSlide }: ChatPanelProps) 
               flexShrink: 0,
             }}
           >送信</button>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              color: "#443366",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 14,
-              padding: "0 2px",
-              flexShrink: 0,
-            }}
-          >✕</button>
         </div>
       </div>
     </div>

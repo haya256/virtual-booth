@@ -38,7 +38,7 @@
   --vb-text-secondary: #c8a0f0;  /* サブテキスト・ラベル */
 
   /* チャットパネル */
-  --vb-chat-bg:     rgba(6, 6, 20, 0.96);  /* チャット背景（半透明） */
+  --vb-chat-bg:     rgba(6, 6, 20, 0.65);  /* チャット背景（半透明） */
   --vb-chat-border: #5544bb;               /* チャット枠線 */
 }
 
@@ -62,6 +62,26 @@
   --vb-text-secondary: #88dd99;
   --vb-chat-bg:     rgba(4, 12, 4, 0.96);
   --vb-chat-border: #1a6a3a;
+}
+
+*/
+
+
+/* =============================================
+   キャラクターアニメーション例: 目のパチパチ
+   attendant.svg のデフォルトIDを対象にしています
+   =============================================
+
+#attendant-left-eye,
+#attendant-right-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: attendant-blink 4s infinite;
+}
+
+@keyframes attendant-blink {
+  0%, 88%, 100% { transform: scaleY(1); }
+  92%           { transform: scaleY(0.08); }
 }
 
 */

@@ -126,7 +126,7 @@ export default function Display({ currentSlide: current, setCurrentSlide: setCur
     <div className="flex flex-col items-center gap-1">
       {/* モニター本体 */}
       <div
-        className="relative w-56 h-36 rounded-sm overflow-hidden group"
+        className="relative w-72 h-44 rounded-sm overflow-hidden group"
         style={{
           background: "#0d0d1a",
           border: "3px solid var(--vb-display-border)",
@@ -183,8 +183,8 @@ export default function Display({ currentSlide: current, setCurrentSlide: setCur
       </div>
 
       {/* モニタースタンド */}
-      <div className="w-8 h-3 rounded-sm" style={{ background: "#334" }} />
-      <div className="w-16 h-1.5 rounded" style={{ background: "#445" }} />
+      <div className="w-10 h-3 rounded-sm" style={{ background: "#334" }} />
+      <div className="w-20 h-1.5 rounded" style={{ background: "#445" }} />
     </div>
   );
 }

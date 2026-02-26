@@ -2,7 +2,8 @@
 
 ## ブース設定
 - タイトル: VIRTUAL BOOTH
-- サブタイトル: こちらは、VIRTUAL BOOTHによる、VIRTUAL BOOTHのバーチャル展示ブースです😁
+- サブタイトル: こちらは、VIRTUAL BOOTHによる、VIRTUAL BOOTHのバーチャル展示ブースです 😁
+- 担当者名: AI 担当者
 - パンフレット: pamphlet.html
 
 ## 参照ファイル
