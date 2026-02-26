@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import Booth from "@/components/Booth";
 import BoothScaler from "@/components/BoothScaler";
+import { parseSlides } from "@/lib/slides";
 
 function getBoothConfig() {
   try {
@@ -9,9 +10,10 @@ function getBoothConfig() {
     const title = guide.match(/^- タイトル: (.+)$/m)?.[1]?.trim() ?? "VIRTUAL BOOTH";
     const subtitle = guide.match(/^- サブタイトル: (.+)$/m)?.[1]?.trim() ?? "";
     const attendantName = guide.match(/^- 担当者名: (.+)$/m)?.[1]?.trim() ?? "AI 担当者";
-    return { title, subtitle, attendantName };
+    const slides = parseSlides(guide);
+    return { title, subtitle, attendantName, slides };
   } catch {
-    return { title: "VIRTUAL BOOTH", subtitle: "", attendantName: "AI 担当者" };
+    return { title: "VIRTUAL BOOTH", subtitle: "", attendantName: "AI 担当者", slides: [] };
   }
 }
 
@@ -24,12 +26,12 @@ function getAttendantSVG(): string {
 }
 
 export default function Home() {
-  const { title, subtitle, attendantName } = getBoothConfig();
+  const { title, subtitle, attendantName, slides } = getBoothConfig();
   const attendantSVG = getAttendantSVG();
   return (
     <main style={{ position: "fixed", inset: 0, background: "var(--vb-bg)", overflow: "hidden" }}>
       <BoothScaler>
-        <Booth title={title} subtitle={subtitle} attendantSVG={attendantSVG} attendantName={attendantName} />
+        <Booth title={title} subtitle={subtitle} slides={slides} attendantSVG={attendantSVG} attendantName={attendantName} />
       </BoothScaler>
     </main>
   );

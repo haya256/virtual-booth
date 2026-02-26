@@ -5,8 +5,9 @@ import Display from "./Display";
 import Pamphlet from "./Pamphlet";
 import Attendant from "./Attendant";
 import ChatPanel from "./ChatPanel";
+import { SlideData } from "@/lib/slides";
 
-type BoothProps = { title: string; subtitle: string; attendantSVG?: string; attendantName?: string };
+type BoothProps = { title: string; subtitle: string; slides: SlideData[]; attendantSVG?: string; attendantName?: string };
 
 // 壁・机の高さ定数 (px)
 // WALL_H + DESK_H + DESK_FRONT_H + SHADOW_H = 432 = 768 * 9/16 → 16:9 設計比率
@@ -18,7 +19,7 @@ const SHADOW_H = 8;
 // 担当者の縦位置: 小さい値=上、大きい値=下 (attendant.svg のサイズ変更時は要調整)
 const ATTENDANT_TOP = 46;
 
-export default function Booth({ title, subtitle, attendantSVG, attendantName = "AI 担当者" }: BoothProps) {
+export default function Booth({ title, subtitle, slides, attendantSVG, attendantName = "AI 担当者" }: BoothProps) {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -160,7 +161,7 @@ export default function Booth({ title, subtitle, attendantSVG, attendantName = "
             zIndex: 3,
           }}
         >
-          <Display currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} />
+          <Display slides={slides} currentSlide={currentSlide} setCurrentSlide={setCurrentSlide} />
         </div>
 
         {/* ── パンフレット（z=3: 机の右端） ── */}

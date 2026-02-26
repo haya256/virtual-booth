@@ -52,6 +52,46 @@ content/
 
 ---
 
+## ディスプレイスライド
+
+<!-- スライドデータ。ここを編集するとブース上のディスプレイの内容が変わります。 -->
+<!-- フィールド: label（見出し）/ title（大タイトル、"|"で改行）/ body（本文、複数行は "body: |" + インデント） -->
+<!--            items（絵文字付き箇条書き）/ steps（番号付きステップ）/ code（コードブロック） -->
+
+### SLIDE:1
+label: WELCOME TO
+title: VIRTUAL|BOOTH
+body: AIが対応するオンラインブース
+
+### SLIDE:2
+label: WHAT IS THIS?
+body: |
+  イベントブースを
+  Webで再現する
+  オープンソースの
+  プラットフォームです。
+
+### SLIDE:3
+label: FEATURES
+items:
+  - 🤖 AIがリアルタイムで質問対応
+  - 🎨 skin.css でテーマ変更
+  - 🧑 attendant.svg でキャラ差し替え
+  - ⚡ ストリーミング応答対応
+
+### SLIDE:4
+label: CUSTOMIZE
+code: content/ を書き換えるだけ
+body: guide.md・skin.css・attendant.svg・pamphlet.html の4ファイルで見た目もAIも自由にカスタマイズ
+
+### SLIDE:5
+label: GET STARTED
+steps:
+  - リポジトリをクローン
+  - guide.md を編集
+  - APIキーを設定
+  - デプロイして公開！
+
 ## ディスプレイのスライド操作
 
 会話中に `[SLIDE:N]` というマーカーを使うと、ブースのディスプレイのスライドをN枚目に切り替えることができます。

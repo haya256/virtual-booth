@@ -1,126 +1,102 @@
 "use client";
 
-const slides = [
-  // スライド 1: タイトル
-  {
-    content: (
-      <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-3"
-        style={{ background: "linear-gradient(135deg, #1a0f40 0%, #2d1b69 100%)" }}>
-        <div className="text-xs tracking-widest" style={{ color: "var(--vb-text-secondary)" }}>WELCOME TO</div>
+import { SlideData } from "@/lib/slides";
+
+function SlideRenderer({ slide }: { slide: SlideData }) {
+  const isTitle = !!slide.title;
+
+  return (
+    <div
+      className={`w-full h-full flex flex-col p-3 ${isTitle ? "items-center justify-center gap-1.5" : "justify-center gap-2"}`}
+      style={{
+        background: isTitle
+          ? "linear-gradient(135deg, #1a0f40 0%, #2d1b69 100%)"
+          : "#0a0a1f",
+      }}
+    >
+      {slide.label && (
+        <div
+          className="text-xs font-bold tracking-wider"
+          style={{ color: "var(--vb-display-border)" }}
+        >
+          {slide.label}
+        </div>
+      )}
+
+      {slide.title && (
         <div
           className="text-lg font-black tracking-widest text-center leading-tight"
-          style={{ color: "var(--vb-accent)", textShadow: "0 0 12px color-mix(in srgb, var(--vb-accent) 80%, transparent)", fontFamily: "monospace" }}
+          style={{
+            color: "var(--vb-accent)",
+            textShadow: "0 0 12px color-mix(in srgb, var(--vb-accent) 80%, transparent)",
+            fontFamily: "monospace",
+          }}
         >
-          VIRTUAL<br />BOOTH
+          {slide.title.split("|").map((line, i, arr) => (
+            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+          ))}
         </div>
-        <div className="text-xs text-center mt-1" style={{ color: "#9977cc" }}>
-          AIが対応する<br />オンラインブース
-        </div>
-      </div>
-    ),
-  },
-  // スライド 2: 概要
-  {
-    content: (
-      <div className="w-full h-full flex flex-col justify-center gap-2 p-4"
-        style={{ background: "#0d0d1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-1" style={{ color: "var(--vb-display-border)" }}>
-          WHAT IS THIS?
-        </div>
-        <p className="text-xs leading-relaxed" style={{ color: "#ccc0ee" }}>
-          イベントブースを<br />
-          Webで再現する<br />
-          オープンソースの<br />
-          プラットフォームです。
-        </p>
-        <div className="w-8 h-0.5 rounded" style={{ background: "var(--vb-display-border)" }} />
-      </div>
-    ),
-  },
-  // スライド 3: 特徴
-  {
-    content: (
-      <div className="w-full h-full flex flex-col justify-center gap-1.5 p-3"
-        style={{ background: "#0a0a1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "var(--vb-display-border)" }}>
-          FEATURES
-        </div>
-        {[
-          { icon: "🤖", text: "AIがリアルタイムで質問対応" },
-          { icon: "📝", text: "guide.md を書き換えるだけ" },
-          { icon: "🖥️", text: "ブースを忠実に再現" },
-          { icon: "⚡", text: "ストリーミング応答対応" },
-        ].map((item) => (
-          <div key={item.text} className="flex items-center gap-1.5">
-            <span style={{ fontSize: 10 }}>{item.icon}</span>
-            <span className="text-xs" style={{ color: "#bbaade", fontSize: 10 }}>
-              {item.text}
-            </span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  // スライド 4: カスタマイズ
-  {
-    content: (
-      <div className="w-full h-full flex flex-col justify-center gap-2 p-3"
-        style={{ background: "#0d0d1f" }}>
-        <div className="text-xs font-bold tracking-wider" style={{ color: "var(--vb-display-border)" }}>
-          CUSTOMIZE
-        </div>
+      )}
+
+      {slide.code && (
         <div
           className="text-xs rounded px-2 py-1.5 font-mono"
           style={{ background: "#1a1a35", color: "#88ffaa", border: "1px solid #334" }}
         >
-          content/guide.md
+          {slide.code}
         </div>
-        <p className="text-xs leading-relaxed" style={{ color: "#bbaade", fontSize: 10 }}>
-          このファイルを書き換えるだけで<br />
-          AIの知識・口調・対応内容を<br />
-          自由にカスタマイズできます。
-        </p>
-      </div>
-    ),
-  },
-  // スライド 5: 使い方
-  {
-    content: (
-      <div className="w-full h-full flex flex-col justify-center gap-2 p-3"
-        style={{ background: "#0a0a1f" }}>
-        <div className="text-xs font-bold tracking-wider mb-0.5" style={{ color: "var(--vb-display-border)" }}>
-          GET STARTED
-        </div>
-        {[
-          { n: "1", label: "リポジトリをクローン" },
-          { n: "2", label: "guide.md を編集" },
-          { n: "3", label: "APIキーを設定" },
-          { n: "4", label: "デプロイして公開！" },
-        ].map((step) => (
-          <div key={step.n} className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold"
-              style={{ background: "var(--vb-display-border)", fontSize: 8 }}
-            >
-              {step.n}
-            </div>
-            <span style={{ color: "#bbaade", fontSize: 10 }}>{step.label}</span>
+      )}
+
+      {slide.items?.map((item, i) => {
+        const firstSpace = item.indexOf(" ");
+        const hasIcon = firstSpace > 0 && (item.codePointAt(0) ?? 0) > 127;
+        const icon = hasIcon ? item.slice(0, firstSpace) : "";
+        const text = hasIcon ? item.slice(firstSpace + 1) : item;
+        return (
+          <div key={i} className="flex items-center gap-1.5">
+            {icon && <span style={{ fontSize: 10 }}>{icon}</span>}
+            <span style={{ color: "#bbaade", fontSize: 10 }}>{text}</span>
           </div>
-        ))}
-      </div>
-    ),
-  },
-];
+        );
+      })}
+
+      {slide.steps?.map((step, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div
+            className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold"
+            style={{ background: "var(--vb-display-border)", fontSize: 8 }}
+          >
+            {i + 1}
+          </div>
+          <span style={{ color: "#bbaade", fontSize: 10 }}>{step}</span>
+        </div>
+      ))}
+
+      {slide.body && (
+        <p
+          className={`text-xs leading-relaxed${isTitle ? " text-center mt-1" : ""}`}
+          style={{ color: isTitle ? "#9977cc" : "#ccc0ee" }}
+        >
+          {slide.body.split("\n").map((line, i, arr) => (
+            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+          ))}
+        </p>
+      )}
+    </div>
+  );
+}
 
 type DisplayProps = {
+  slides: SlideData[];
   currentSlide: number;
   setCurrentSlide: (n: number) => void;
 };
 
-export default function Display({ currentSlide: current, setCurrentSlide: setCurrent }: DisplayProps) {
-
+export default function Display({ slides, currentSlide: current, setCurrentSlide: setCurrent }: DisplayProps) {
   const prev = () => setCurrent((current - 1 + slides.length) % slides.length);
   const next = () => setCurrent((current + 1) % slides.length);
+
+  if (slides.length === 0) return null;
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -134,7 +110,7 @@ export default function Display({ currentSlide: current, setCurrentSlide: setCur
         }}
       >
         {/* スライドコンテンツ */}
-        {slides[current].content}
+        <SlideRenderer slide={slides[current]} />
 
         {/* 走査線オーバーレイ */}
         <div
