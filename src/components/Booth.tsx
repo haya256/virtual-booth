@@ -157,7 +157,7 @@ export default function Booth({ title, subtitle, slides, attendantSVG, attendant
           style={{
             position: "absolute",
             top: WALL_H - 163,
-            left: 40,
+            left: 60,
             zIndex: 3,
           }}
         >
