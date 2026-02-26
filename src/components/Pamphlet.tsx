@@ -28,10 +28,20 @@ export default function Pamphlet({
           }}
         >
           {/* サムネイル */}
-          <img
-            src="/pamphlet-thumb.svg"
-            alt="パンフレットプレビュー"
-            className="w-full h-full object-cover object-top"
+          <iframe
+            src="/pamphlet"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 794,
+              height: 1123,
+              transform: `scale(${80 / 794})`,
+              transformOrigin: "top left",
+              border: "none",
+              pointerEvents: "none",
+            }}
+            scrolling="no"
           />
 
           {/* ホバーオーバーレイ */}
