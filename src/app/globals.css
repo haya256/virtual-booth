@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/*
+ * スキン変数の既定値。
+ * content/skin.css で同じ変数を定義すると、そちらが優先されます。
+ */
 :root {
   /* ページ背景 */
   --vb-bg: #0a0a1a;
@@ -15,12 +19,21 @@
   /* ネオンアクセント（看板・グロー） */
   --vb-accent: #ff6ef7;
 
-  /* ディスプレイ枠線 */
+  /* 看板の背景 */
+  --vb-sign-bg: #1a0f40;
+
+  /* スポットライトの光 */
+  --vb-spot: rgba(255, 255, 255, 0.13);
+
+  /* ディスプレイ枠線・スライド画面 */
   --vb-display-border: #4488ff;
+  --vb-screen-bg: #0a0a1f;
+  --vb-screen-text: #ccc0ee;
 
   /* 机上面 */
   --vb-desk-top: #8a5a30;
   --vb-desk-bottom: #7a4e2d;
+  --vb-desk-edge: #a06030;
 
   /* 机前面 */
   --vb-desk-front-top: #5c3a1e;
@@ -29,10 +42,14 @@
   /* テキスト */
   --vb-text-primary: #e2d9ff;
   --vb-text-secondary: #c8a0f0;
+  --vb-text-muted: #8877aa;
 
   /* チャットパネル */
   --vb-chat-bg: rgba(6, 6, 20, 0.96);
   --vb-chat-border: #5544bb;
+
+  /* 看板・会話ウィンドウのフォント（ドット文字） */
+  --vb-font-dialog: var(--font-dot), "DotGothic16", ui-monospace, monospace;
 }
 
 @theme inline {
@@ -50,7 +67,218 @@ body {
   box-sizing: border-box;
 }
 
+/* ───────── 会場の背景（ブースの後ろ・画面全体） ───────── */
+
+.vb-venue {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, color-mix(in srgb, var(--vb-wall-mid) 55%, transparent) 0%, transparent 70%),
+    var(--vb-bg);
+}
+
+/* 遠くの照明のボケ */
+.vb-venue::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(circle at 12% 22%, color-mix(in srgb, var(--vb-accent) 16%, transparent) 0, transparent 9%),
+    radial-gradient(circle at 86% 16%, color-mix(in srgb, var(--vb-display-border) 18%, transparent) 0, transparent 11%),
+    radial-gradient(circle at 74% 78%, color-mix(in srgb, var(--vb-accent) 10%, transparent) 0, transparent 8%),
+    radial-gradient(circle at 22% 84%, color-mix(in srgb, var(--vb-display-border) 12%, transparent) 0, transparent 10%),
+    radial-gradient(circle at 40% 8%, color-mix(in srgb, var(--vb-text-secondary) 9%, transparent) 0, transparent 6%);
+  filter: blur(18px);
+  animation: vb-drift 26s ease-in-out infinite alternate;
+}
+
+/* 周辺を暗く落とす */
+.vb-venue::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+@keyframes vb-drift {
+  from { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+  to   { transform: translate3d(1.5%, 1%, 0) scale(1.06); }
+}
+
+/* ───────── ブース ───────── */
+
+.vb-booth {
+  animation: vb-enter 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes vb-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
 @keyframes vb-marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-100%); }
+}
+
+/* 看板ネオンのかすかな明滅 */
+.vb-neon {
+  animation: vb-neon-flicker 7s linear infinite;
+}
+
+@keyframes vb-neon-flicker {
+  0%, 100% { opacity: 1; }
+  41%      { opacity: 1; }
+  42%      { opacity: 0.72; }
+  43%      { opacity: 1; }
+  45%      { opacity: 0.85; }
+  46%      { opacity: 1; }
+  78%      { opacity: 1; }
+  79%      { opacity: 0.8; }
+  80%      { opacity: 1; }
+}
+
+/* スポットライトのゆらぎ */
+.vb-spotlight {
+  animation: vb-spot-sway 9s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+
+@keyframes vb-spot-sway {
+  from { opacity: 0.75; transform: rotate(var(--vb-spot-angle, 0deg)); }
+  to   { opacity: 1;    transform: rotate(calc(var(--vb-spot-angle, 0deg) + 2.5deg)); }
+}
+
+/* ───────── ディスプレイ ───────── */
+
+.vb-slide {
+  animation: vb-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes vb-slide-in {
+  from { opacity: 0; transform: translateX(14px); filter: brightness(1.8); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+
+.vb-led {
+  animation: vb-led-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes vb-led-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ───────── AI担当者 ─────────
+ * ラッパーに data-state="idle | thinking | talking" が付きます。
+ * content/skin.css から同じセレクタで独自の演出に差し替えられます。
+ */
+
+.vb-attendant-figure {
+  transform-origin: 50% 100%;
+  animation: vb-idle 4.5s ease-in-out infinite;
+}
+
+.vb-attendant[data-state="thinking"] .vb-attendant-figure {
+  animation: vb-think 1.8s ease-in-out infinite;
+}
+
+.vb-attendant[data-state="talking"] .vb-attendant-figure {
+  animation: vb-talk-bob 0.7s ease-in-out infinite;
+}
+
+/* 口パク: attendant.svg の #attendant-mouth、または既定キャラの口 */
+.vb-attendant[data-state="talking"] #attendant-mouth,
+.vb-attendant[data-state="talking"] .vb-attendant-mouth {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  animation: vb-mouth 0.32s ease-in-out infinite;
+}
+
+@keyframes vb-idle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@keyframes vb-think {
+  0%, 100% { transform: rotate(-2deg) translateY(0); }
+  50%      { transform: rotate(-4deg) translateY(-1px); }
+}
+
+@keyframes vb-talk-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
+
+@keyframes vb-mouth {
+  0%, 100% { transform: scaleY(1); }
+  50%      { transform: scaleY(0.35); }
+}
+
+/* 声かけの吹き出し */
+.vb-bubble {
+  animation: vb-bubble-float 3.2s ease-in-out infinite;
+}
+
+@keyframes vb-bubble-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* ───────── 会話ウィンドウ ───────── */
+
+.vb-chat {
+  animation: vb-chat-open 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes vb-chat-open {
+  from { opacity: 0; transform: translateY(16px) scaleY(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+
+.vb-chip {
+  background: color-mix(in srgb, var(--vb-chat-border) 22%, transparent);
+  color: var(--vb-text-secondary);
+  border: 1px solid color-mix(in srgb, var(--vb-chat-border) 80%, transparent);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.vb-chip:hover,
+.vb-chip:focus-visible {
+  background: color-mix(in srgb, var(--vb-accent) 22%, transparent);
+  border-color: var(--vb-accent);
+  color: var(--vb-text-primary);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.vb-caret {
+  animation: vb-caret-bob 0.9s ease-in-out infinite;
+}
+
+@keyframes vb-caret-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(3px); }
+}
+
+/* ───────── 動きを減らす設定への対応 ───────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-venue::before,
+  .vb-booth,
+  .vb-neon,
+  .vb-spotlight,
+  .vb-slide,
+  .vb-led,
+  .vb-attendant-figure,
+  .vb-attendant[data-state] .vb-attendant-figure,
+  .vb-attendant[data-state="talking"] #attendant-mouth,
+  .vb-attendant[data-state="talking"] .vb-attendant-mouth,
+  .vb-bubble,
+  .vb-chat,
+  .vb-caret {
+    animation: none;
+  }
 }

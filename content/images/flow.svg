@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 264 104" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif">
+  <!-- 質問から回答までの流れ: 質問 → 資料検索 → AI → 回答＋スライド -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L6,3 L0,6 z" fill="#8fb4ff"/>
+    </marker>
+  </defs>
+
+  <!-- 資料の束 -->
+  <g fill="#1d1b45" stroke="#6f62c9" stroke-width="1">
+    <rect x="79" y="8" width="52" height="16" rx="2"/>
+    <rect x="75" y="12" width="52" height="16" rx="2"/>
+    <rect x="71" y="16" width="52" height="16" rx="2"/>
+  </g>
+  <text x="97" y="27.5" font-size="8" fill="#c9c2f5" text-anchor="middle">資料・URL</text>
+  <path d="M97,33 V50" stroke="#8fb4ff" stroke-width="1.4" stroke-dasharray="3 2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- 4つのステップ -->
+  <g stroke-width="1.4">
+    <rect x="4" y="54" width="46" height="30" rx="4" fill="#1a1a3d" stroke="#8fb4ff"/>
+    <rect x="70" y="54" width="54" height="30" rx="4" fill="#2a1750" stroke="#ff8df8"/>
+    <rect x="144" y="54" width="40" height="30" rx="4" fill="#1a1a3d" stroke="#8fb4ff"/>
+    <rect x="204" y="54" width="56" height="30" rx="4" fill="#1a1a3d" stroke="#8fb4ff"/>
+  </g>
+  <g font-size="9" font-weight="bold" text-anchor="middle" fill="#f1ecff">
+    <text x="27" y="72.5">質問</text>
+    <text x="97" y="72.5">資料検索</text>
+    <text x="164" y="72.5">AI</text>
+    <text x="232" y="67.5">回答 ＋</text>
+    <text x="232" y="78.5">スライド</text>
+  </g>
+  <g stroke="#8fb4ff" stroke-width="1.4" fill="none" marker-end="url(#arrow)">
+    <path d="M52,69 H67"/>
+    <path d="M126,69 H141"/>
+    <path d="M186,69 H201"/>
+  </g>
+
+  <text x="97" y="98" font-size="7.5" fill="#ff8df8" text-anchor="middle">関連する部分だけ選ぶ</text>
+</svg>

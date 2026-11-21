@@ -5,6 +5,8 @@ export type SlideData = {
   items?: string[]; // 箇条書き（"絵文字 テキスト" 形式）
   steps?: string[]; // 番号付きステップ
   code?: string;    // コードブロック
+  image?: string;   // 画像ファイル名（content/images/ 内）
+  note?: string;    // AI向けの説明ポイント・使いどころ（画面には表示されない）
 };
 
 export function parseSlides(guide: string): SlideData[] {
@@ -21,6 +23,9 @@ export function parseSlides(guide: string): SlideData[] {
   return parts.slice(1).map(parseSlideBlock).filter((s) => Object.keys(s).length > 0);
 }
 
+const TEXT_FIELDS = ["label", "title", "code", "image", "body", "note"] as const;
+const MULTILINE_FIELDS = new Set<string>(["body", "note"]);
+
 function parseSlideBlock(block: string): SlideData {
   const slide: SlideData = {};
   const lines = block.split("\n");
@@ -29,25 +34,20 @@ function parseSlideBlock(block: string): SlideData {
   while (i < lines.length) {
     const line = lines[i];
 
-    if (line.startsWith("label: ")) {
-      slide.label = line.slice(7).trim();
-    } else if (line.startsWith("title: ")) {
-      slide.title = line.slice(7).trim();
-    } else if (line.startsWith("code: ")) {
-      slide.code = line.slice(6).trim();
-    } else if (line === "body: |") {
-      // インデント付き複数行
-      const bodyLines: string[] = [];
+    // "body: |" / "note: |" + インデント付き複数行
+    const multi = /^(\w+): \|$/.exec(line);
+    if (multi && MULTILINE_FIELDS.has(multi[1])) {
+      const collected: string[] = [];
       i++;
       while (i < lines.length && lines[i].startsWith("  ")) {
-        bodyLines.push(lines[i].slice(2));
+        collected.push(lines[i].slice(2));
         i++;
       }
-      slide.body = bodyLines.join("\n").trimEnd();
+      slide[multi[1] as "body" | "note"] = collected.join("\n").trimEnd();
       continue;
-    } else if (line.startsWith("body: ")) {
-      slide.body = line.slice(6).trim();
-    } else if (line === "items:" || line === "steps:") {
+    }
+
+    if (line === "items:" || line === "steps:") {
       const list: string[] = [];
       i++;
       while (i < lines.length && lines[i].startsWith("  - ")) {
@@ -59,8 +59,24 @@ function parseSlideBlock(block: string): SlideData {
       continue;
     }
 
+    const field = TEXT_FIELDS.find((f) => line.startsWith(`${f}: `));
+    if (field) slide[field] = line.slice(field.length + 2).trim();
+
     i++;
   }
 
   return slide;
+}
+
+/** スライド1枚の表示内容を、AIに渡すための1行テキストにする */
+export function describeSlide(slide: SlideData): string {
+  const parts: string[] = [];
+  if (slide.label) parts.push(slide.label);
+  if (slide.title) parts.push(slide.title.replace(/\|/g, " "));
+  if (slide.body) parts.push(slide.body.replace(/\n/g, ""));
+  if (slide.code) parts.push(`コード: ${slide.code}`);
+  if (slide.items?.length) parts.push(slide.items.join("、"));
+  if (slide.steps?.length) parts.push(slide.steps.map((s, i) => `${i + 1}. ${s}`).join(" "));
+  if (slide.image) parts.push("（図・画像）");
+  return parts.join(" / ");
 }

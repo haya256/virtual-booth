@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, DotGothic16 } from "next/font/google";
 import { readFileSync } from "fs";
 import { join } from "path";
 import "./globals.css";
@@ -22,6 +22,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// 看板・会話ウィンドウ用の日本語ドットフォント（--vb-font-dialog から参照）
+const dotGothic = DotGothic16({
+  variable: "--font-dot",
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "バーチャルブース",
   description: "AIアシスタントがご質問にお答えするバーチャルブースです",
@@ -33,8 +42,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const skinCSS = getSkinCSS();
+  // --font-dot は :root の --vb-font-dialog から参照するため、body ではなく html に付ける
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja" className={dotGothic.variable} suppressHydrationWarning>
       <head>
         {skinCSS && <style dangerouslySetInnerHTML={{ __html: skinCSS }} />}
       </head>
