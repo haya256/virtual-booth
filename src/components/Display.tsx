@@ -2,21 +2,24 @@
 
 import { SlideData } from "@/lib/slides";
 
+// これより枚数が多いときは、点の代わりに「3 / 12」形式で現在位置を示す
+const MAX_DOTS = 8;
+
 function SlideRenderer({ slide }: { slide: SlideData }) {
   const isTitle = !!slide.title;
 
   return (
     <div
-      className={`w-full h-full flex flex-col p-3 ${isTitle ? "items-center justify-center gap-1.5" : "justify-center gap-2"}`}
+      className={`w-full h-full flex flex-col p-3 pb-4 ${isTitle ? "items-center justify-center gap-1.5" : "justify-center gap-2"}`}
       style={{
         background: isTitle
-          ? "linear-gradient(135deg, #1a0f40 0%, #2d1b69 100%)"
-          : "#0a0a1f",
+          ? "linear-gradient(135deg, var(--vb-sign-bg) 0%, var(--vb-wall-mid) 100%)"
+          : "var(--vb-screen-bg)",
       }}
     >
       {slide.label && (
         <div
-          className="text-xs font-bold tracking-wider"
+          className="text-xs font-bold tracking-wider flex-shrink-0"
           style={{ color: "var(--vb-display-border)" }}
         >
           {slide.label}
@@ -29,13 +32,24 @@ function SlideRenderer({ slide }: { slide: SlideData }) {
           style={{
             color: "var(--vb-accent)",
             textShadow: "0 0 12px color-mix(in srgb, var(--vb-accent) 80%, transparent)",
-            fontFamily: "monospace",
+            fontFamily: "var(--vb-font-dialog)",
           }}
         >
           {slide.title.split("|").map((line, i, arr) => (
             <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
           ))}
         </div>
+      )}
+
+      {slide.image && (
+        // content/images/ の画像。サイズが不定なので next/image ではなく素の img を使う
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/booth-assets/${encodeURIComponent(slide.image)}`}
+          alt={slide.label ?? ""}
+          className="w-full min-h-0 flex-1 object-contain"
+          draggable={false}
+        />
       )}
 
       {slide.code && (
@@ -55,7 +69,7 @@ function SlideRenderer({ slide }: { slide: SlideData }) {
         return (
           <div key={i} className="flex items-center gap-1.5">
             {icon && <span style={{ fontSize: 10 }}>{icon}</span>}
-            <span style={{ color: "#bbaade", fontSize: 10 }}>{text}</span>
+            <span style={{ color: "var(--vb-screen-text)", fontSize: 10 }}>{text}</span>
           </div>
         );
       })}
@@ -68,14 +82,14 @@ function SlideRenderer({ slide }: { slide: SlideData }) {
           >
             {i + 1}
           </div>
-          <span style={{ color: "#bbaade", fontSize: 10 }}>{step}</span>
+          <span style={{ color: "var(--vb-screen-text)", fontSize: 10 }}>{step}</span>
         </div>
       ))}
 
       {slide.body && (
         <p
           className={`text-xs leading-relaxed${isTitle ? " text-center mt-1" : ""}`}
-          style={{ color: isTitle ? "#9977cc" : "#ccc0ee" }}
+          style={{ color: isTitle ? "var(--vb-text-secondary)" : "var(--vb-screen-text)" }}
         >
           {slide.body.split("\n").map((line, i, arr) => (
             <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
@@ -92,75 +106,124 @@ type DisplayProps = {
   setCurrentSlide: (n: number) => void;
 };
 
-export default function Display({ slides, currentSlide: current, setCurrentSlide: setCurrent }: DisplayProps) {
+export default function Display({ slides, currentSlide, setCurrentSlide: setCurrent }: DisplayProps) {
+  if (slides.length === 0) return null;
+
+  const current = Math.max(0, Math.min(currentSlide, slides.length - 1));
   const prev = () => setCurrent((current - 1 + slides.length) % slides.length);
   const next = () => setCurrent((current + 1) % slides.length);
 
-  if (slides.length === 0) return null;
-
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* モニター本体 */}
+    <div className="flex flex-col items-center">
+      {/* モニター本体（ベゼル） */}
       <div
-        className="relative w-72 h-44 rounded-sm overflow-hidden group"
+        className="relative rounded-md"
         style={{
-          background: "#0d0d1a",
-          border: "3px solid var(--vb-display-border)",
-          boxShadow: "0 0 20px color-mix(in srgb, var(--vb-display-border) 50%, transparent), inset 0 0 10px color-mix(in srgb, var(--vb-display-border) 10%, transparent)",
+          padding: "5px 5px 11px",
+          background: "linear-gradient(180deg, #23233a 0%, #12121f 100%)",
+          boxShadow:
+            "0 0 0 1px #05050c, 0 0 22px color-mix(in srgb, var(--vb-display-border) 45%, transparent), 0 6px 14px rgba(0,0,0,0.5)",
         }}
       >
-        {/* スライドコンテンツ */}
-        <SlideRenderer slide={slides[current]} />
-
-        {/* 走査線オーバーレイ */}
+        {/* 画面 */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="relative w-72 h-44 rounded-sm overflow-hidden group"
           style={{
-            background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
+            background: "var(--vb-screen-bg)",
+            border: "2px solid var(--vb-display-border)",
+            boxShadow: "inset 0 0 14px color-mix(in srgb, var(--vb-display-border) 18%, transparent)",
+          }}
+          aria-roledescription="スライド"
+          aria-label={`スライド ${current + 1} / ${slides.length}`}
+        >
+          {/* スライドコンテンツ（key を変えて切り替えのたびにアニメーションを再生） */}
+          <div key={current} className="vb-slide w-full h-full">
+            <SlideRenderer slide={slides[current]} />
+          </div>
+
+          {/* 走査線オーバーレイ */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px)",
+            }}
+          />
+          {/* ガラスの映り込み */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "linear-gradient(125deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 22%, transparent 40%)",
+            }}
+          />
+
+          {/* 前へボタン */}
+          <button
+            onClick={prev}
+            className="absolute left-0 top-0 bottom-0 w-7 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+            style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.5), transparent)" }}
+            aria-label="前のスライド"
+          >
+            <span style={{ color: "white", fontSize: 14 }}>‹</span>
+          </button>
+
+          {/* 次へボタン */}
+          <button
+            onClick={next}
+            className="absolute right-0 top-0 bottom-0 w-7 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+            style={{ background: "linear-gradient(270deg, rgba(0,0,0,0.5), transparent)" }}
+            aria-label="次のスライド"
+          >
+            <span style={{ color: "white", fontSize: 14 }}>›</span>
+          </button>
+
+          {/* ページインジケーター */}
+          {slides.length <= MAX_DOTS ? (
+            <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className="rounded-full transition-all"
+                  style={{
+                    width: i === current ? 12 : 5,
+                    height: 5,
+                    background: i === current ? "var(--vb-display-border)" : "rgba(255,255,255,0.3)",
+                  }}
+                  aria-label={`スライド ${i + 1}`}
+                  aria-current={i === current}
+                />
+              ))}
+            </div>
+          ) : (
+            <div
+              className="absolute bottom-1 right-2 font-mono"
+              style={{ color: "rgba(255,255,255,0.55)", fontSize: 9, letterSpacing: "0.08em" }}
+            >
+              {current + 1} / {slides.length}
+            </div>
+          )}
+        </div>
+
+        {/* 電源LED */}
+        <div
+          className="vb-led absolute rounded-full"
+          style={{
+            width: 4,
+            height: 4,
+            right: 9,
+            bottom: 3.5,
+            background: "var(--vb-display-border)",
+            boxShadow: "0 0 5px var(--vb-display-border)",
           }}
         />
-
-        {/* 前へボタン */}
-        <button
-          onClick={prev}
-          className="absolute left-0 top-0 bottom-0 w-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.5), transparent)" }}
-          aria-label="前のスライド"
-        >
-          <span style={{ color: "white", fontSize: 14 }}>‹</span>
-        </button>
-
-        {/* 次へボタン */}
-        <button
-          onClick={next}
-          className="absolute right-0 top-0 bottom-0 w-7 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ background: "linear-gradient(270deg, rgba(0,0,0,0.5), transparent)" }}
-          aria-label="次のスライド"
-        >
-          <span style={{ color: "white", fontSize: 14 }}>›</span>
-        </button>
-
-        {/* ページインジケーター */}
-        <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
-          {slides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className="rounded-full transition-all"
-              style={{
-                width: i === current ? 12 : 5,
-                height: 5,
-                background: i === current ? "#4488ff" : "rgba(255,255,255,0.3)",
-              }}
-              aria-label={`スライド ${i + 1}`}
-            />
-          ))}
-        </div>
       </div>
 
       {/* モニタースタンド */}
-      <div className="w-10 h-3 rounded-sm" style={{ background: "#334" }} />
-      <div className="w-20 h-1.5 rounded" style={{ background: "#445" }} />
+      <div className="w-10 h-3" style={{ background: "linear-gradient(90deg, #1c1c2e, #3a3a52 50%, #1c1c2e)" }} />
+      <div
+        className="w-24 h-1.5 rounded"
+        style={{ background: "linear-gradient(180deg, #4a4a66, #2a2a3e)", boxShadow: "0 2px 4px rgba(0,0,0,0.5)" }}
+      />
     </div>
   );
 }

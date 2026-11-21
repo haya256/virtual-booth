@@ -1,8 +1,15 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+import type { AttendantState } from "./Attendant";
 
 const CHARS_PER_PAGE = 120;
+// 会話ウィンドウは3行固定。改行を含む回答がはみ出さないよう、行数でもページを区切る。
+const LINES_PER_PAGE = 3;
+const CHARS_PER_LINE = 46; // 1行に確実に収まる全角文字数
+const MAX_QUESTION_CHARS = 40; // api/chat/route.ts の上限と揃える
+const TYPE_INTERVAL_MS = 26; // 文字送りの速さ（1文字あたり）
+const MAX_CHIPS = 4;
 
 type Message = { role: "user" | "assistant"; content: string };
 type Section = { slide: number | null; pages: string[] };
@@ -10,188 +17,299 @@ type Section = { slide: number | null; pages: string[] };
 type ChatPanelProps = {
   onClose: () => void;
   setCurrentSlide: (n: number) => void;
+  slideCount: number;
   attendantName?: string;
+  suggestedQuestions?: string[];
+  onStateChange?: (state: AttendantState) => void;
 };
+
+const SENTENCE_ENDS = ["。", "！", "？", "\n"];
+
+function lastSentenceEnd(text: string): number {
+  return Math.max(...SENTENCE_ENDS.map((c) => text.lastIndexOf(c)));
+}
+
+/** text の先頭から、1ページ（文字数上限かつ3行以内）に収まる文字数を返す */
+function pageCapacity(text: string): number {
+  const max = Math.min(text.length, CHARS_PER_PAGE);
+  let lines = 1;
+  let column = 0;
+  for (let i = 0; i < max; i++) {
+    if (text[i] === "\n") {
+      lines++;
+      column = 0;
+    } else if (++column > CHARS_PER_LINE) {
+      lines++;
+      column = 1;
+    }
+    if (lines > LINES_PER_PAGE) return i;
+  }
+  return max;
+}
 
 function splitIntoPages(text: string): string[] {
   const pages: string[] = [];
   let remaining = text.trim();
   while (remaining.length > 0) {
-    if (remaining.length <= CHARS_PER_PAGE) {
+    const capacity = pageCapacity(remaining);
+    if (remaining.length <= capacity) {
       pages.push(remaining);
       break;
     }
-    const slice = remaining.slice(0, CHARS_PER_PAGE);
-    const boundary = Math.max(
-      slice.lastIndexOf("。"),
-      slice.lastIndexOf("！"),
-      slice.lastIndexOf("？"),
-      slice.lastIndexOf("\n"),
-    );
-    const breakAt = boundary > CHARS_PER_PAGE * 0.5 ? boundary + 1 : CHARS_PER_PAGE;
+    const boundary = lastSentenceEnd(remaining.slice(0, capacity));
+    let breakAt = boundary > capacity * 0.5 ? boundary + 1 : capacity;
+    // 句読点や閉じ括弧が次ページの先頭に来ないよう、1文字だけこのページに含める
+    if ("。、！？」）".includes(remaining[breakAt] ?? "\n")) breakAt++;
     pages.push(remaining.slice(0, breakAt).trim());
     remaining = remaining.slice(breakAt).trim();
   }
-  return pages.filter(p => p.length > 0);
+  return pages.filter((p) => p.length > 0);
 }
 
 /**
  * [SLIDE:N] マーカーでテキストをセクションに分割する。
  * 各セクションは { slide: 表示するスライド番号(0-indexed) | null, pages: string[] }
  */
-function parseIntoSections(rawText: string): Section[] {
-  const parts = rawText.split(/\[SLIDE:(\d+)\]/);
+function parseIntoSections(rawText: string, slideCount: number): Section[] {
+  const parts = stripMarkdown(rawText).split(/\[SLIDE:(\d+)\]/);
   const sections: Section[] = [];
 
   // マーカー前のテキスト
   if (parts[0].trim()) {
-    sections.push({ slide: null, pages: splitIntoPages(parts[0].trim()) });
+    sections.push({ slide: null, pages: splitIntoPages(parts[0]) });
   }
 
   // [SLIDE:N] + 後続テキストのペア
   for (let i = 1; i < parts.length; i += 2) {
-    const slide = Math.max(0, Math.min(parseInt(parts[i], 10) - 1, 4));
+    const n = parseInt(parts[i], 10);
+    const slide = slideCount > 0 ? Math.max(0, Math.min(n - 1, slideCount - 1)) : null;
     const text = (parts[i + 1] ?? "").trim();
-    if (text) {
-      sections.push({ slide, pages: splitIntoPages(text) });
-    }
+    if (text) sections.push({ slide, pages: splitIntoPages(text) });
   }
 
-  return sections.length > 0 ? sections : [{ slide: null, pages: [""] }];
+  return sections;
 }
 
-export default function ChatPanel({ onClose, setCurrentSlide, attendantName = "AI 担当者" }: ChatPanelProps) {
+/**
+ * 会話ウィンドウはプレーンテキスト表示なので、AIが書きがちな Markdown 記法を取り除く。
+ * （`code` / **強調** / # 見出し / - 箇条書き）
+ */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/`+/g, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*[-*]\s+/gm, "・")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{2,}/g, "\n");
+}
+
+/** ストリーミング途中の、書きかけのマーカー（"[SL" など）を表示から外す */
+function dropPartialMarker(text: string): string {
+  return text.replace(/\[(?:S(?:L(?:I(?:D(?:E(?::\d*)?)?)?)?)?)?$/, "");
+}
+
+/**
+ * ストリーミング中の最終ページのうち、後から次ページへ回されることのない文字数。
+ * ここまでだけを文字送りすることで、表示済みの文字が消えて次ページに移るのを防ぐ。
+ */
+function stableLength(page: string): number {
+  // ページの区切りは「前半を過ぎた最後の文末」か「容量いっぱい」のどちらか。
+  // 最後の文末が前半にあるうちは、今ある文字はすべてこのページに残る。
+  const boundary = lastSentenceEnd(page);
+  return boundary > page.length * 0.5 ? boundary + 1 : page.length;
+}
+
+function sourceLabel(source: string): string {
+  return source.split("/").at(-1) ?? source;
+}
+
+export default function ChatPanel({
+  onClose,
+  setCurrentSlide,
+  slideCount,
+  attendantName = "AI 担当者",
+  suggestedQuestions = [],
+  onStateChange,
+}: ChatPanelProps) {
   const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [sections, setSections] = useState<Section[]>([]);
+  const [isLoading, setIsLoading] = useState(false); // 送信〜ストリーミング完了まで
+  const [rawText, setRawText] = useState(""); // 今回の回答（マーカー込み）
+  const [sources, setSources] = useState<string[]>([]);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [pageIdx, setPageIdx] = useState(0);
+  const [typed, setTyped] = useState(0); // 現在のページで表示済みの文字数
 
+  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const accumulatedContent = useRef("");
+  const abortRef = useRef<AbortController | null>(null);
+  const reducedMotion = useRef(false);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    reducedMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    inputRef.current?.focus();
+    return () => abortRef.current?.abort();
+  }, []);
 
   // 回答完了時に入力欄へ自動フォーカス
   useEffect(() => {
     if (!isLoading) inputRef.current?.focus();
   }, [isLoading]);
 
+  const sections = useMemo(
+    () => parseIntoSections(dropPartialMarker(rawText), slideCount),
+    [rawText, slideCount],
+  );
+
   const currentSection = sections[sectionIdx];
   const currentText = currentSection?.pages[pageIdx] ?? "";
   const hasNextPage = !!currentSection && pageIdx < currentSection.pages.length - 1;
   const hasNextSection = sectionIdx < sections.length - 1;
-  const canAdvance = !isLoading && sections.length > 0 && (hasNextPage || hasNextSection);
+  const hasNext = hasNextPage || hasNextSection;
 
-  // ページ or セクション（＝スライド）を進める
+  // 文字送りしてよい上限。ストリーミング中の最終ページだけは確定済みの部分まで。
+  const typeLimit = isLoading && !hasNext ? stableLength(currentText) : currentText.length;
+  const isTyping = typed < typeLimit;
+  const shownText = currentText.slice(0, typed);
+  const canAdvance = hasNext && !isTyping;
+  const isWaiting = isLoading && sections.length === 0; // まだ1文字も届いていない
+
+  // 文字送り
+  useEffect(() => {
+    if (typed >= typeLimit) return;
+    const id = setTimeout(
+      () => setTyped((t) => (reducedMotion.current ? typeLimit : Math.min(t + 1, typeLimit))),
+      TYPE_INTERVAL_MS,
+    );
+    return () => clearTimeout(id);
+  }, [typed, typeLimit]);
+
+  // 読んでいる位置のスライドをディスプレイに映す
+  const activeSlide = currentSection?.slide ?? null;
+  useEffect(() => {
+    if (activeSlide !== null) setCurrentSlide(activeSlide);
+  }, [activeSlide, sectionIdx, setCurrentSlide]);
+
+  // 担当者の状態（考え中 / 会話中 / 待機）を親へ伝える
+  const attendantState: AttendantState = isWaiting ? "thinking" : isTyping || isLoading ? "talking" : "idle";
+  useEffect(() => {
+    onStateChange?.(attendantState);
+  }, [attendantState, onStateChange]);
+
+  // 文字送りをスキップ → 次のページ → 次のセクション（＝スライド）の順に進める
   const advance = useCallback(() => {
-    if (isLoading) return;
-    if (hasNextPage) {
-      setPageIdx(p => p + 1);
-      return;
-    }
-    if (hasNextSection) {
-      const nextIdx = sectionIdx + 1;
-      const nextSection = sections[nextIdx];
-      if (nextSection.slide !== null) {
-        setCurrentSlide(nextSection.slide);
-      }
-      setSectionIdx(nextIdx);
+    if (sections.length === 0) return;
+    if (isTyping) {
+      setTyped(typeLimit);
+    } else if (hasNextPage) {
+      setPageIdx((p) => p + 1);
+      setTyped(0);
+    } else if (hasNextSection) {
+      setSectionIdx((s) => s + 1);
       setPageIdx(0);
+      setTyped(0);
     }
-  }, [isLoading, hasNextPage, hasNextSection, sectionIdx, sections, setCurrentSlide]);
+  }, [sections.length, isTyping, typeLimit, hasNextPage, hasNextSection]);
 
-  // グローバルキーリスナー
+  // グローバルキーリスナー（入力欄の外で Space / Enter）
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (document.activeElement === inputRef.current) return;
+      const active = document.activeElement;
+      if (active === inputRef.current) return;
+      // 会話ウィンドウ内のボタン（質問ボタン・閉じる等）は通常どおり押せるようにする
+      if (active instanceof HTMLButtonElement && panelRef.current?.contains(active)) return;
       if (e.isComposing || e.shiftKey) return;
       if (e.key !== "Enter" && e.key !== " ") return;
-      if (isLoading) return;
       e.preventDefault();
       advance();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isLoading, advance]);
+  }, [advance]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-    const userMessage: Message = { role: "user", content: input };
-    const newHistory = [...history, userMessage];
+  const showAnswer = (text: string) => {
+    setRawText(text);
+    setSectionIdx(0);
+    setPageIdx(0);
+    setTyped(0);
+  };
+
+  const sendMessage = async (text: string) => {
+    const question = text.trim();
+    if (!question || question.length > MAX_QUESTION_CHARS || isLoading) return;
+
+    const newHistory: Message[] = [...history, { role: "user", content: question }];
     setHistory(newHistory);
     setInput("");
     setIsLoading(true);
+    setSources([]);
+    showAnswer("");
 
-    accumulatedContent.current = "";
-    setSections([]);
-    setSectionIdx(0);
-    setPageIdx(0);
+    const abort = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = abort;
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newHistory }),
+        signal: abort.signal,
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        const errorMsg = errorData?.error ?? "エラーが発生しました。もう一度お試しください。";
-        setSections([{ slide: null, pages: [errorMsg] }]);
-        setSectionIdx(0);
-        setPageIdx(0);
+        showAnswer(errorData?.error ?? "エラーが発生しました。もう一度お試しください。");
         return;
       }
       if (!response.body) throw new Error("API error");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let firstSlideApplied = false;
+      let buffer = "";
+      let answer = "";
+
+      const handleLine = (line: string) => {
+        if (!line.startsWith("data: ")) return;
+        const data = line.slice(6).trim();
+        if (!data || data === "[DONE]") return;
+        try {
+          const event = JSON.parse(data);
+          if (Array.isArray(event.vb_sources)) {
+            setSources(event.vb_sources.filter((s: unknown) => typeof s === "string"));
+            return;
+          }
+          const delta = event.choices?.[0]?.delta?.content;
+          if (typeof delta === "string" && delta) {
+            answer += delta;
+            setRawText(answer); // 届いた分から順に表示する
+          }
+        } catch { /* 不完全な行は無視 */ }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") break;
-          try {
-            const delta = JSON.parse(data).choices?.[0]?.delta?.content ?? "";
-            if (!delta) continue;
-            accumulatedContent.current += delta;
-
-            // 最初の [SLIDE:N] だけ即時適用（ストリーミング中の視覚的フィードバック）
-            if (!firstSlideApplied) {
-              const m = /\[SLIDE:(\d+)\]/.exec(accumulatedContent.current);
-              if (m) {
-                const n = Math.max(0, Math.min(parseInt(m[1], 10) - 1, 4));
-                setCurrentSlide(n);
-                firstSlideApplied = true;
-              }
-            }
-          } catch { /* ignore */ }
-        }
+        // チャンクの境界が行の途中に来ることがあるので、改行までをためてから処理する
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        lines.forEach(handleLine);
       }
+      handleLine(buffer);
 
-      // ストリーミング完了 → セクション分割して表示
-      const rawText = accumulatedContent.current;
-      const newSections = parseIntoSections(rawText);
-      const cleanText = rawText.replace(/\[SLIDE:\d+\]/g, "").trim();
-      setHistory(prev => [...prev, { role: "assistant", content: cleanText }]);
-      setSections(newSections);
-      setSectionIdx(0);
-      setPageIdx(0);
-      // 先頭セクションのスライドを確定適用
-      if (newSections[0]?.slide !== null) {
-        setCurrentSlide(newSections[0].slide!);
+      const cleanText = stripMarkdown(answer).replace(/\[SLIDE:\d+\]/g, "").trim();
+      if (!cleanText) {
+        showAnswer("申し訳ございません、うまく回答を作れませんでした。もう一度お試しください。");
+        return;
       }
+      setHistory((prev) => [...prev, { role: "assistant", content: cleanText }]);
     } catch {
-      setSections([{ slide: null, pages: ["申し訳ございません、エラーが発生しました。もう一度お試しください。"] }]);
-      setSectionIdx(0);
-      setPageIdx(0);
+      if (abort.signal.aborted) return;
+      setSources([]);
+      showAnswer("申し訳ございません、エラーが発生しました。もう一度お試しください。");
     } finally {
-      setIsLoading(false);
+      if (abortRef.current === abort) setIsLoading(false);
     }
   };
 
@@ -199,7 +317,7 @@ export default function ChatPanel({ onClose, setCurrentSlide, attendantName = "A
     if (e.nativeEvent.isComposing) return;
     if (e.shiftKey) return;
     if (e.key === "Enter") {
-      if (input.trim()) sendMessage();
+      if (input.trim()) sendMessage(input);
       else advance();
     } else if (e.key === " " && !input.trim()) {
       e.preventDefault();
@@ -207,147 +325,185 @@ export default function ChatPanel({ onClose, setCurrentSlide, attendantName = "A
     }
   };
 
+  const tooLong = input.trim().length > MAX_QUESTION_CHARS;
+  const canSend = !isLoading && !!input.trim() && !tooLong;
   const remainingSections = sections.length - 1 - sectionIdx;
+  const chips = suggestedQuestions.filter((q) => q.length <= MAX_QUESTION_CHARS).slice(0, MAX_CHIPS);
+  const shownSources = sources.slice(0, 2).map(sourceLabel).join("・") + (sources.length > 2 ? ` 他${sources.length - 2}件` : "");
+
+  let hint = "";
+  if (isTyping) hint = "Space / Enter → スキップ";
+  else if (hasNextPage) hint = "Space / Enter → 次へ";
+  else if (hasNextSection) hint = `Space / Enter → 次のスライドへ（残り ${remainingSections}）`;
 
   return (
-    <div style={{ width: "100%", fontFamily: "monospace" }}>
+    <div ref={panelRef} className="vb-chat" style={{ width: "100%", fontFamily: "var(--vb-font-dialog)" }}>
       <div style={{
         background: "var(--vb-chat-bg)",
         border: "2px solid var(--vb-chat-border)",
-        borderRadius: 4,
-        boxShadow: "0 0 0 1px #110033, 0 -4px 24px color-mix(in srgb, var(--vb-chat-border) 40%, transparent)",
+        borderRadius: 6,
+        boxShadow: "0 0 0 1px rgba(0,0,0,0.6), 0 -4px 24px color-mix(in srgb, var(--vb-chat-border) 40%, transparent), inset 0 0 24px color-mix(in srgb, var(--vb-chat-border) 14%, transparent)",
         overflow: "hidden",
-        backdropFilter: "blur(1px)",
+        backdropFilter: "blur(6px)",
       }}>
-        {/* キャラクター名タグ + 閉じるボタン */}
-        <div style={{ paddingTop: 8, paddingLeft: 12, paddingRight: 8, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        {/* キャラクター名タグ + 状態表示 + 閉じるボタン */}
+        <div style={{ paddingTop: 8, paddingLeft: 12, paddingRight: 8, display: "flex", alignItems: "flex-end", gap: 10 }}>
           <div style={{
-            display: "inline-block",
-            background: "rgba(22, 17, 58, 0.35)",
+            flexShrink: 0,
+            background: "color-mix(in srgb, var(--vb-chat-border) 28%, transparent)",
             border: "2px solid var(--vb-chat-border)",
-            borderBottom: "2px solid #16113a",
+            borderBottom: "none",
             borderRadius: "4px 4px 0 0",
             padding: "2px 14px",
             color: "var(--vb-text-secondary)",
-            fontSize: 11,
-            fontWeight: "bold",
-            letterSpacing: "0.15em",
-            marginBottom: -2,
-            position: "relative",
-            zIndex: 1,
+            fontSize: 12,
+            letterSpacing: "0.12em",
           }}>{attendantName}</div>
+
+          <div style={{
+            flex: 1, minWidth: 0, paddingBottom: 3,
+            display: "flex", justifyContent: "flex-end", gap: 12,
+            color: "var(--vb-text-muted)", fontSize: 10, letterSpacing: "0.05em", whiteSpace: "nowrap",
+          }}>
+            {shownSources && sections.length > 0 && (
+              <span title={sources.join("\n")} style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                参照: {shownSources}
+              </span>
+            )}
+            {currentSection && currentSection.pages.length > 1 && (
+              <span>{pageIdx + 1} / {currentSection.pages.length}</span>
+            )}
+            {hint && <span>{hint}</span>}
+          </div>
+
           <button
             onClick={onClose}
+            aria-label="会話を閉じる"
+            title="閉じる (Esc)"
             style={{
+              flexShrink: 0,
               background: "transparent",
-              color: "#443366",
+              color: "var(--vb-text-muted)",
               border: "none",
               cursor: "pointer",
               fontSize: 14,
-              padding: "0 2px",
+              padding: "0 4px 3px",
               lineHeight: 1,
             }}
           >✕</button>
         </div>
 
-        {/* テキスト表示エリア */}
-        <div style={{
-          background: "rgba(22, 17, 58, 0.35)",
-          border: "1px solid #332266",
-          margin: "0 12px",
-          borderRadius: "0 4px 4px 4px",
-          minHeight: 72,
-          padding: "10px 14px",
-          color: "var(--vb-text-primary)",
-          fontSize: 13,
-          lineHeight: 1.85,
-          letterSpacing: "0.04em",
-        }}>
-          {isLoading ? (
+        {/* テキスト表示エリア（3行ぶんの高さで固定） */}
+        <div
+          onClick={advance}
+          aria-live="polite"
+          style={{
+            background: "color-mix(in srgb, var(--vb-chat-border) 12%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--vb-chat-border) 70%, transparent)",
+            margin: "0 12px",
+            borderRadius: "0 4px 4px 4px",
+            height: 88,
+            padding: "8px 14px",
+            color: "var(--vb-text-primary)",
+            fontSize: 14,
+            lineHeight: "24px",
+            letterSpacing: "0.03em",
+            whiteSpace: "pre-wrap",
+            overflow: "hidden",
+            cursor: isTyping || canAdvance ? "pointer" : "default",
+          }}
+        >
+          {isWaiting ? (
             <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
-              <span style={{ color: "#9977cc", fontSize: 12 }}>考え中</span>
-              {[0, 150, 300].map(d => (
+              <span style={{ color: "var(--vb-text-secondary)", fontSize: 13 }}>考え中</span>
+              {[0, 150, 300].map((d) => (
                 <span key={d} className="animate-bounce" style={{
                   width: 5, height: 5, borderRadius: "50%",
-                  background: "#7755aa", display: "inline-block",
+                  background: "var(--vb-text-muted)", display: "inline-block",
                   animationDelay: `${d}ms`,
                 }} />
               ))}
             </span>
           ) : sections.length === 0 ? (
-            <span style={{ color: "#554477", fontSize: 12 }}>
-              何でもお気軽にご質問ください。
-            </span>
+            <>
+              <div style={{ color: "var(--vb-text-secondary)", fontSize: 13 }}>
+                こんにちは！何でもお気軽にご質問ください。
+              </div>
+              {chips.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+                  {chips.map((q) => (
+                    <button
+                      key={q}
+                      className="vb-chip"
+                      onClick={(e) => { e.stopPropagation(); sendMessage(q); }}
+                      style={{
+                        borderRadius: 999,
+                        padding: "0 10px",
+                        fontSize: 11,
+                        lineHeight: "20px",
+                        fontFamily: "inherit",
+                        cursor: "pointer",
+                      }}
+                    >{q}</button>
+                  ))}
+                </div>
+              )}
+            </>
           ) : (
             <>
-              {currentText}
+              {shownText}
               {canAdvance && (
-                <span className="animate-bounce" style={{
+                <span className="vb-caret" style={{
                   display: "inline-block", marginLeft: 6,
                   color: hasNextPage ? "var(--vb-text-secondary)" : "var(--vb-display-border)",
-                  fontSize: 13, lineHeight: 1, verticalAlign: "middle",
+                  fontSize: 12, lineHeight: 1,
                 }}>▼</span>
               )}
             </>
           )}
         </div>
 
-        {/* ページ・セクション情報 */}
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "3px 14px 0",
-          color: "#443366", fontSize: 10, letterSpacing: "0.05em",
-        }}>
-          <span>
-            {!isLoading && currentSection && currentSection.pages.length > 1 &&
-              `${pageIdx + 1} / ${currentSection.pages.length}`}
-          </span>
-          <span>
-            {!isLoading && canAdvance && (
-              hasNextPage
-                ? "Space / Enter → 次へ"
-                : `Space / Enter → 次のスライドへ（残り ${remainingSections}）`
-            )}
-          </span>
-        </div>
-
-        {/* 区切り */}
-        <div style={{ height: 1, background: "#1e1650", margin: "6px 12px 0" }} />
-
         {/* 入力エリア */}
-        <div style={{ display: "flex", gap: 6, padding: "7px 12px", alignItems: "center" }}>
-          <span style={{ color: "var(--vb-border)", fontSize: 13, flexShrink: 0 }}>▶</span>
+        <div style={{ display: "flex", gap: 6, padding: "6px 12px 7px", alignItems: "center" }}>
+          <span style={{ color: "var(--vb-chat-border)", fontSize: 13, flexShrink: 0 }}>▶</span>
           <input
             ref={inputRef}
             type="text"
             value={input}
-            onChange={e => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="質問を入力..."
+            placeholder={isLoading ? "回答中…" : "質問を入力..."}
+            aria-label="質問"
             disabled={isLoading}
             style={{
               flex: 1,
+              minWidth: 0,
               background: "transparent",
               color: "var(--vb-text-primary)",
               border: "none",
               outline: "none",
-              fontSize: 13,
-              fontFamily: "monospace",
-              letterSpacing: "0.04em",
+              fontSize: 14,
+              fontFamily: "inherit",
+              letterSpacing: "0.03em",
             }}
           />
+          {input && (
+            <span style={{ flexShrink: 0, fontSize: 10, color: tooLong ? "#ff7a90" : "var(--vb-text-muted)" }}>
+              {input.trim().length} / {MAX_QUESTION_CHARS}
+            </span>
+          )}
           <button
-            onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
+            onClick={() => sendMessage(input)}
+            disabled={!canSend}
             style={{
-              background: "transparent",
-              color: isLoading || !input.trim() ? "var(--vb-text-secondary)" : "var(--vb-text-primary)",
-              border: `1px solid ${isLoading || !input.trim() ? "#221144" : "#6655aa"}`,
+              background: canSend ? "color-mix(in srgb, var(--vb-chat-border) 35%, transparent)" : "transparent",
+              color: canSend ? "var(--vb-text-primary)" : "var(--vb-text-muted)",
+              border: `1px solid ${canSend ? "var(--vb-chat-border)" : "color-mix(in srgb, var(--vb-chat-border) 40%, transparent)"}`,
               borderRadius: 3,
               padding: "2px 12px",
-              fontSize: 11,
-              fontFamily: "monospace",
-              cursor: isLoading || !input.trim() ? "default" : "pointer",
+              fontSize: 12,
+              fontFamily: "inherit",
+              cursor: canSend ? "pointer" : "default",
               letterSpacing: "0.1em",
               flexShrink: 0,
             }}

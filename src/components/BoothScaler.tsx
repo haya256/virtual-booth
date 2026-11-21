@@ -28,6 +28,7 @@ export default function BoothScaler({ children }: { children: React.ReactNode })
       style={{
         position: "absolute",
         inset: 0,
+        zIndex: 1, // 会場背景（.vb-venue の疑似要素）より手前
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -36,6 +37,7 @@ export default function BoothScaler({ children }: { children: React.ReactNode })
       <div
         style={{
           width: BOOTH_DESIGN_W,
+          flexShrink: 0, // 画面が設計幅より狭くても縮めない（縮小は transform で行う）
           transformOrigin: "center center",
           transform: `scale(${scale ?? 0})`,
           transition: scale === null ? "none" : undefined,

@@ -19,15 +19,26 @@
   /* ブース枠線色 */
   --vb-border: #5544aa;
 
-  /* ネオンアクセント色（看板テキスト・ボーダー・グロー効果） */
+  /* ネオンアクセント色（看板テキスト・ボーダー・グロー効果・机のLEDライン） */
   --vb-accent: #ff6ef7;
+
+  /* 看板の背景色 */
+  --vb-sign-bg: #1a0f40;
+
+  /* スポットライトの光の色 */
+  --vb-spot: rgba(255, 255, 255, 0.13);
 
   /* ディスプレイ（モニター）の枠線・スライド見出し色 */
   --vb-display-border: #4488ff;
 
+  /* スライド画面の背景色・文字色 */
+  --vb-screen-bg:   #0a0a1f;
+  --vb-screen-text: #ccc0ee;
+
   /* 机の上面グラデーション */
   --vb-desk-top:    #8a5a30;  /* 机上面の上部色 */
   --vb-desk-bottom: #7a4e2d;  /* 机上面の下部色 */
+  --vb-desk-edge:   #a06030;  /* 机の奥の縁 */
 
   /* 机の前面グラデーション（厚みの表現） */
   --vb-desk-front-top:    #5c3a1e;
@@ -36,10 +47,15 @@
   /* テキスト色 */
   --vb-text-primary:   #e2d9ff;  /* メインテキスト */
   --vb-text-secondary: #c8a0f0;  /* サブテキスト・ラベル */
+  --vb-text-muted:     #8877aa;  /* 補足テキスト（操作ヒントなど） */
 
   /* チャットパネル */
-  --vb-chat-bg:     rgba(6, 6, 20, 0.65);  /* チャット背景（半透明） */
+  --vb-chat-bg:     rgba(6, 6, 20, 0.9);  /* チャット背景（半透明） */
   --vb-chat-border: #5544bb;               /* チャット枠線 */
+
+  /* 看板・会話ウィンドウのフォント（既定はドット文字の DotGothic16）
+     例: 普通のゴシック体にする場合 → --vb-font-dialog: sans-serif; */
+  /* --vb-font-dialog: sans-serif; */
 }
 
 
@@ -55,13 +71,39 @@
   --vb-wall-end:   #071a12;
   --vb-border:     #1a5a3a;
   --vb-accent:     #00ff88;
+  --vb-sign-bg:    #06180e;
   --vb-display-border: #00cc66;
+  --vb-screen-bg:   #04120a;
+  --vb-screen-text: #b8e8c8;
   --vb-desk-top:    #3a2a10;
   --vb-desk-bottom: #2e2010;
+  --vb-desk-edge:   #5a4018;
   --vb-text-primary:   #d0ffe0;
   --vb-text-secondary: #88dd99;
-  --vb-chat-bg:     rgba(4, 12, 4, 0.96);
+  --vb-text-muted:     #5f9a70;
+  --vb-chat-bg:     rgba(4, 12, 4, 0.9);
   --vb-chat-border: #1a6a3a;
+}
+
+*/
+
+
+/* =============================================
+   キャラクターの状態別アニメーション例
+   担当者には会話の状況に応じて data-state が付きます
+     idle     … 待機中
+     thinking … AIが考え中
+     talking  … 回答を表示中（#attendant-mouth があれば自動で口パク）
+   下のコメントを外すと、会話中に体を左右に揺らします
+   =============================================
+
+.vb-attendant[data-state="talking"] .vb-attendant-figure {
+  animation: my-sway 0.9s ease-in-out infinite;
+}
+
+@keyframes my-sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
 }
 
 */

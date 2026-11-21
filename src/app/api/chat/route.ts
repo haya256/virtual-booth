@@ -1,43 +1,13 @@
 import { NextRequest } from "next/server";
 import OpenAI from "openai";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { loadGuide, buildSystemPrompt } from "@/lib/guide";
+import { findRelated } from "@/lib/knowledge";
 
-// content/ 内のファイル、および例外的に許可する上位ファイルのホワイトリスト
-const ALLOWED_UPPER_FILES = new Set(["../README.md"]);
+const MAX_QUESTION_CHARS = 40;
+const MAX_HISTORY_MESSAGES = 10;
+const MAX_HISTORY_CHARS = 2000; // 履歴1件あたりの上限
 
-function getGuide(): string {
-  try {
-    const contentDir = join(process.cwd(), "content");
-    const guide = readFileSync(join(contentDir, "guide.md"), "utf-8");
-
-    // ## 参照ファイル セクションからパスを抽出
-    const refSection = guide.match(/^## 参照ファイル$([\s\S]*?)^##/m);
-    if (!refSection) return guide;
-
-    const filePaths = [...refSection[1].matchAll(/^- (.+)$/gm)]
-      .map(m => m[1].trim());
-
-    const extras = filePaths
-      .filter(p => {
-        if (p.startsWith("..")) return ALLOWED_UPPER_FILES.has(p); // 上位はホワイトリストのみ
-        return !p.includes("/.."); // content/ 内はトラバーサルなしのみ
-      })
-      .map(p => {
-        try {
-          const content = readFileSync(join(contentDir, p), "utf-8");
-          return `---\n\n### 参照: ${p}\n\n${content}`;
-        } catch {
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    return extras.length > 0 ? `${guide}\n\n${extras.join("\n\n")}` : guide;
-  } catch {
-    return "あなたはイベントブースの担当者AIです。訪問者の質問に丁寧に回答してください。";
-  }
-}
+type ChatMessage = { role: "user" | "assistant"; content: string };
 
 function createClient() {
   return new OpenAI({
@@ -46,54 +16,72 @@ function createClient() {
   });
 }
 
+function jsonError(error: string, status: number) {
+  return new Response(JSON.stringify({ error }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+/** クライアントから届いた履歴を検証し、user / assistant の発言だけを取り出す */
+function sanitizeMessages(input: unknown): ChatMessage[] | null {
+  if (!Array.isArray(input)) return null;
+  const messages: ChatMessage[] = [];
+  for (const m of input) {
+    if (typeof m?.content !== "string") return null;
+    if (m.role !== "user" && m.role !== "assistant") return null;
+    messages.push({ role: m.role, content: m.content });
+  }
+  return messages;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
-
-    if (!Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "Invalid messages" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+    const body = await req.json().catch(() => null);
+    const all = sanitizeMessages(body?.messages);
+    const last = all?.at(-1);
+    if (!all || !last || last.role !== "user" || !last.content.trim()) {
+      return jsonError("Invalid messages", 400);
+    }
+    if (last.content.length > MAX_QUESTION_CHARS) {
+      return jsonError(`メッセージは${MAX_QUESTION_CHARS}文字以内で入力してください。`, 400);
     }
 
-    const lastMessage = messages.at(-1);
-    if (typeof lastMessage?.content === "string" && lastMessage.content.length > 40) {
-      return new Response(JSON.stringify({ error: "メッセージは40文字以内で入力してください。" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
+    const messages = all
+      .slice(-MAX_HISTORY_MESSAGES)
+      .map((m) => ({ ...m, content: m.content.slice(0, MAX_HISTORY_CHARS) }));
 
-    const guide = getGuide();
-    const model = process.env.AI_MODEL ?? "llama3";
-    const client = createClient();
+    // 今回の質問を主に、直前の質問も少し加味して資料を検索する（「それはどうやるの？」対策）
+    const previousQuestion = all.slice(0, -1).findLast((m) => m.role === "user");
+    const guide = loadGuide();
+    const related = await findRelated(guide, [
+      { text: last.content, weight: 1 },
+      ...(previousQuestion ? [{ text: previousQuestion.content.slice(0, 200), weight: 0.4 }] : []),
+    ]);
+    const sources = [...new Set(related.map((c) => c.source))];
 
-    const stream = await client.chat.completions.create({
-      model,
+    const stream = await createClient().chat.completions.create({
+      model: process.env.AI_MODEL ?? "llama3",
       stream: true,
-      messages: [
-        {
-          role: "system",
-          content: guide,
-        },
-        ...messages,
-      ],
+      messages: [{ role: "system", content: buildSystemPrompt(guide, related) }, ...messages],
     });
 
     const readable = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
+        const send = (data: string) => controller.enqueue(encoder.encode(`data: ${data}\n\n`));
         try {
-          for await (const chunk of stream) {
-            const data = JSON.stringify(chunk);
-            controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-          }
-          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          // 最初に、今回の回答で参照した資料名を知らせる（独自イベント）
+          send(JSON.stringify({ vb_sources: sources }));
+          for await (const chunk of stream) send(JSON.stringify(chunk));
+          send("[DONE]");
           controller.close();
         } catch (err) {
           controller.error(err);
         }
+      },
+      cancel() {
+        stream.controller.abort();
       },
     });
 
@@ -106,12 +94,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[chat/route] Error:", err);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return jsonError("Internal server error", 500);
   }
 }
